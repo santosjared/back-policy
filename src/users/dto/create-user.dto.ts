@@ -25,7 +25,8 @@ export class CreateUserDto {
     email: string;
 
     @ApiProperty()
-    @IsStrongPassword()
+    @IsString()
+    // @IsStrongPassword()
     password:string
     
     @ApiProperty()
