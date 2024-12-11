@@ -50,5 +50,5 @@ export class CreateUserDto {
     contry:string
 
     @IsOptional()
-    profile:string
+    profile:any
 }
