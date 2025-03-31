@@ -30,6 +30,7 @@ export class CreateUserDto {
     password:string
     
     @ApiProperty()
+    @IsOptional()
     @IsString({message:'El genero debe ser una cadena de caracteres'})
     // @Length(4,32,{message:'El genero debe contener como minimo 4 carateres y maximo 32'})
     gender:string
@@ -40,6 +41,7 @@ export class CreateUserDto {
     phone:string
 
     @ApiProperty()
+    @IsOptional()
     @IsString({message:'La direccion debe ser una cadena de caracteres'})
     // @Length(2,32,{message:'La direccion debe contener como minimo 2 carateres y maximo 32'})
     address:string
