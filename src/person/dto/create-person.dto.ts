@@ -20,7 +20,7 @@ export class createPersonDto {
 
     @ApiProperty()
     @Transform(({ value }) => value.trim()) 
-    @Length(8,32)
+    @Length(8,64)
     @IsEmail()
     email:string
 

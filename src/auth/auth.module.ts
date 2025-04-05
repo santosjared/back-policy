@@ -7,6 +7,8 @@ import { JwtModule} from '@nestjs/jwt';
 import  environment  from 'src/config/environment'
 import { ConfigModule } from '@nestjs/config';
 import getConfig from 'src/config/environment'
+import { Client, ClientSchema } from 'src/clients/schema/clients.schema';
+import { SingIn, SingInSchema } from './schema/sing-in.schema';
 
 @Module({
   imports:[
@@ -17,12 +19,20 @@ import getConfig from 'src/config/environment'
     JwtModule.register({
       global: true,
       secret:getConfig().JWT_SECRET,
-      signOptions:{expiresIn:'1h'}
+      signOptions:{expiresIn:'15m'}
     }),
-    MongooseModule.forFeature([{
+    MongooseModule.forFeatureAsync([{
     name:Users.name,
-    schema:UsersSchema
+    useFactory:()=>UsersSchema,
   }]),
+  MongooseModule.forFeatureAsync([{
+    name:Client.name,
+    useFactory:()=>ClientSchema
+  }]),
+  MongooseModule.forFeatureAsync([{
+    name:SingIn.name,
+    useFactory:()=>SingInSchema
+  }])
 ],
   controllers: [AuthController],
   providers: [AuthService],

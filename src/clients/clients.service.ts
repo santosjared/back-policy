@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Client, ClientDocumnet } from './schema/clients.schema';
 import { Model } from 'mongoose';
@@ -22,5 +22,13 @@ export class ClientsService {
             console.log('Error al crear cliente: ',e)
             throw new HttpException('Interval Server', HttpStatus.INTERNAL_SERVER_ERROR)
         }
+    }
+    async checkEmail(email){
+        return await this.ClientSercice.findOne({email}) !==null;
+    }
+    async findOne(id:string){
+        const user = await this.ClientSercice.findById(id)
+        if(user) return user
+        throw new NotFoundException('user not found')
     }
 }
