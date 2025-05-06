@@ -7,14 +7,14 @@ import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
 
 @Module({
 
-  imports:[MongooseModule.forFeatureAsync([
+  imports:[MongooseModule.forFeature([
     {
       name:Client.name,
-      useFactory:()=>ClientSchema
+      schema:ClientSchema
     },
     {
       name:Rol.name,
-      useFactory:()=>RolSchema,
+      schema:RolSchema,
     },
   ])],
   controllers: [ClientsController],

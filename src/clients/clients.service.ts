@@ -6,6 +6,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import * as bcrypt from 'bcrypt';
 import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
 import { Roles } from 'src/constants/roles.constants';
+import { UpdateClienteDto } from './dto/update-client.dto';
 
 @Injectable()
 export class ClientsService {
@@ -26,9 +27,14 @@ export class ClientsService {
     async checkEmail(email){
         return await this.ClientSercice.findOne({email}) !==null;
     }
-    async findOne(id:string){
-        const user = await this.ClientSercice.findById(id)
+    async findOne(email:string){
+        const user = await this.ClientSercice.findOne({email})
         if(user) return user
         throw new NotFoundException('user not found')
+    }
+    async update(id:string, updateCliente:UpdateClienteDto){
+        console.log(updateCliente)
+        const result = await this.ClientSercice.findOneAndUpdate({_id:id},updateCliente)
+        return result
     }
 }

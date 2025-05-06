@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, Length, MaxLength, MinLength } from 'class-validator';
-import { IsFile } from 'src/utils/decorator/file.decorator';
 
 export class CreateUserDto {
 

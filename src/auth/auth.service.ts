@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -24,11 +24,20 @@ export class AuthService {
         const payload = { sub: user._id }
         const access_token = this.jwtService.sign(payload);
         const refresh_token = this.jwtService.sign(payload, { expiresIn: '30d' });
-        await this.singIn.create({ userId: user._id });
+        const isAuthenticated = await this.singIn.findOne({ userId: user._id });
+
+        if (!isAuthenticated) {
+          await this.singIn.create({ userId: user._id });
+        } else {
+          await this.singIn.findOneAndUpdate(
+            { userId: user._id },
+            { $set: { updatedAt: new Date() } }
+          );
+        }
         return {
           access_token,
           refresh_token,
-          userData: { name: user.name, lastName: user.lastName, email: user.email }
+          userData: { name: user.name, lastName: user.lastName, email: user.email, userId:user._id }
         };
       }
       throw new UnauthorizedException('password incorect')
@@ -51,28 +60,52 @@ export class AuthService {
   async refreshToken(token: string) {
     try {
       const payload = this.jwtService.verify(token);
-
-      const getToken = this.singIn.findOne({ userId: payload.sub })
-
-      if (!getToken) throw new BadRequestException('token no valido')
-
+  
+      const getToken = await this.singIn.findOne({ userId: payload.sub });
+  
+      if (!getToken) {
+        throw new BadRequestException('Token no válido');
+      }
+  
       const user = await this.findUser(payload.sub);
-
-      const access_token = this.jwtService.sign({ sub: payload.sub })
-      const refresh_token = this.jwtService.sign({ sub: payload.sub }, { expiresIn: '30d' })
-
-      return { access_token, refresh_token, userData: { name: user.name, lastName: user.lastName, email: user.email } }
-
+  
+      const access_token = this.jwtService.sign({ sub: payload.sub });
+      const refresh_token = this.jwtService.sign(
+        { sub: payload.sub },
+        { expiresIn: '30d' },
+      );
+  
+      return {
+        access_token,
+        refresh_token,
+        userData: {
+          name: user.name,
+          lastName: user.lastName,
+          email: user.email,
+          userId: user.id,
+        },
+      };
     } catch (e) {
-      console.error('error en refresco de token: ', e);
-      throw new BadRequestException('token no valido');
+      console.error('Error en refresco de token: ', e);
+      throw new BadRequestException('Token no válido');
     }
-
   }
+  
   async logout(userId: string) {
-    const remove = await this.singIn.findOneAndDelete({ userId })
-    if (remove) return remove
-    throw new NotFoundException('user not found')
+    try {
+      const remove = await this.singIn.findOneAndDelete({ userId });
+
+      if (!remove) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+  
+      return remove;
+    } catch (error) {
+      
+      console.error('Error en logout: ', error);
+      throw new InternalServerErrorException('Hubo un error al cerrar sesión');
+    }
   }
+  
 
 }

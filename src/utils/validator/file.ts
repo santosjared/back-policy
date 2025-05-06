@@ -1,21 +1,15 @@
-import {
-    ValidatorConstraint,
-    ValidatorConstraintInterface,
-    ValidationArguments,
-  } from 'class-validator';
-  
-  @ValidatorConstraint({ async: false })
-  export class IsFileTypeConstraint implements ValidatorConstraintInterface {
-    validate(file: Express.Multer.File, args: ValidationArguments) {
-      const allowedTypes = args.constraints[0] as string[];
-      if (!file) return false; 
-      console.log(file)
-      return allowedTypes.includes(file.mimetype);
+import { BadRequestException } from '@nestjs/common';
+
+export const fileFilter = (req, file: Express.Multer.File, callback: Function) => {
+  if (file.fieldname === 'images') {
+    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+      
+      return callback(new BadRequestException('Solo se permiten imágenes (jpg, jpeg, png, gif)'), false);
     }
-  
-    defaultMessage(args: ValidationArguments) {
-      const allowedTypes = args.constraints[0] as string[];
-      return `File type is invalid. Allowed types: ${allowedTypes.join(', ')}`;
+  } else if (file.fieldname === 'video') {
+    if (!file.mimetype.match(/\/(mp4|avi|mov|wmv)$/)) {
+      return callback(new BadRequestException('Solo se permiten videos (mp4, avi, mov, wmv)'), false);
     }
   }
-  
+  callback(null, true);
+};

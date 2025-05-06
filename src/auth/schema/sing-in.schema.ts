@@ -4,7 +4,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type SingInDocument = HydratedDocument<SingIn>;
 
-@Schema()
+@Schema({timestamps:true})
 export class SingIn {
     
     @Prop()
