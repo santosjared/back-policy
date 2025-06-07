@@ -1,43 +1,55 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
-import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, Length, Matches } from 'class-validator'
+import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, Length, Matches, ValidateIf } from 'class-validator'
 
 
 export class createPersonDto {
     @ApiProperty()
-    @IsString({message:'El campo nombre debe ser una cadena de caracteres de Aa - Zz'})
+    @IsString({ message: 'El campo nombre debe ser una cadena de caracteres de Aa - Zz' })
     @Matches(/^[A-Za-z\s]+$/, { message: 'El nombre solo puede contener letras y espacios' })
-    @Transform(({ value }) => value.trim()) 
-    @Length(4,20)
-    name:string
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Length(4, 20)
+    name: string
 
     @ApiProperty()
     @Matches(/^[A-Za-z\s]+$/, { message: 'El nombre solo puede contener letras y espacios' })
-    @IsString({message:'El campo apellido debe ser una cadena de caracteres Aa - Zz'})
-    @Transform(({ value }) => value.trim()) 
-    @Length(4,20)
-    lastName:string
+    @IsString({ message: 'El campo apellido debe ser una cadena de caracteres Aa - Zz' })
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Length(4, 20)
+    lastName: string
 
     @ApiProperty()
-    @Transform(({ value }) => value.trim()) 
-    @Length(8,64)
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Length(8, 64)
     @IsEmail()
-    email:string
+    email: string
 
     @ApiProperty()
     @IsString()
-    @Transform(({ value }) => value.trim()) 
-    @Length(8,32)
-    password:string
-     
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Length(8, 32)
+    password: string
+
     @ApiProperty()
-    @Transform(({ value }) => value.trim()) 
-    @IsPhoneNumber()
-    @Length(6,16)
-    phone:string
+    @Transform(({ value }) => {
+        if (typeof value === 'number') return value.toString();
+        if (typeof value === 'string') return value.trim();
+        return value;
+    })
+    @ValidateIf(({ phone }) => typeof phone === 'string' || typeof phone === 'number')
+    @IsString()
+    @Length(6, 8)
+    phone: string
 
     @IsOptional()
     @IsString()
-    profile:string
-    
+    profile: string
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    rol: string
+
 }
+
+

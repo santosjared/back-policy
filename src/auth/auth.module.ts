@@ -9,6 +9,8 @@ import { ConfigModule } from '@nestjs/config';
 import getConfig from 'src/config/environment'
 import { Client, ClientSchema } from 'src/clients/schema/clients.schema';
 import { SingIn, SingInSchema } from './schema/sing-in.schema';
+import { GoogleAuthService } from './google-auth.service';
+import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
 
 @Module({
   imports:[
@@ -21,20 +23,24 @@ import { SingIn, SingInSchema } from './schema/sing-in.schema';
       secret:getConfig().JWT_SECRET,
       signOptions:{expiresIn:'15m'}
     }),
-    MongooseModule.forFeatureAsync([{
+    MongooseModule.forFeature([{
     name:Users.name,
-    useFactory:()=>UsersSchema,
+    schema:UsersSchema,
   }]),
-  MongooseModule.forFeatureAsync([{
+  MongooseModule.forFeature([{
     name:Client.name,
-    useFactory:()=>ClientSchema
+    schema:ClientSchema
   }]),
-  MongooseModule.forFeatureAsync([{
+  MongooseModule.forFeature([{
     name:SingIn.name,
-    useFactory:()=>SingInSchema
+    schema:SingInSchema
+  }]),
+  MongooseModule.forFeature([{
+    name:Rol.name,
+    schema:RolSchema
   }])
 ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, GoogleAuthService],
 })
 export class AuthModule {}

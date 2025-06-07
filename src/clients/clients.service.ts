@@ -18,13 +18,13 @@ export class ClientsService {
         try{
             const password = await bcrypt.hash(createClientDto.password,10)
             const rol = await this.rolService.findOne({name:Roles.CLIENT})
-            return await this.ClientSercice.create({...createClientDto, password, rol:rol._id})
+            return await this.ClientSercice.create({...createClientDto, password, rol:rol._id, provider:'local'})
         }catch(e){
             console.log('Error al crear cliente: ',e)
             throw new HttpException('Interval Server', HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
-    async checkEmail(email){
+    async checkEmail(email:string){
         return await this.ClientSercice.findOne({email}) !==null;
     }
     async findOne(email:string){
@@ -33,7 +33,6 @@ export class ClientsService {
         throw new NotFoundException('user not found')
     }
     async update(id:string, updateCliente:UpdateClienteDto){
-        console.log(updateCliente)
         const result = await this.ClientSercice.findOneAndUpdate({_id:id},updateCliente)
         return result
     }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class CreateRolDto {
 
@@ -8,6 +8,12 @@ export class CreateRolDto {
     name:string
 
     @ApiProperty()
+    @IsOptional()
     @IsArray({context:String})
-    perssisions: Array<[]>
+    permissions: Array<[]>
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    description:string
 }
