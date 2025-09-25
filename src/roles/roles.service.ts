@@ -60,38 +60,33 @@ export class RolesService {
         return await this.rolService.findByIdAndDelete(id)
     }
 
-    async asignePermission(id: string, createPermissions: CreatePermissionDto) {
-        const role = await this.rolService.findById(id).populate({
-            path: 'permissions',
-            populate: [
-                { path: 'action' },
-                { path: 'subject' }
-            ]
-        })
-
-        const updatedPermissionIds = []
-
-        for (const incomingPermission of createPermissions.permissions) {
-            const existingPermission = role.permissions.find(
-                perm => perm.subject._id.toString() === incomingPermission.subject
-            )
-
-            if (existingPermission) {
-                const updated = await this.permissionService.findByIdAndUpdate(existingPermission._id, {
-                    action: incomingPermission.action
-                })
-                updatedPermissionIds.push(updated._id)
+async asignePermission(id: string, createPermissions: CreatePermissionDto) {
+    const permissions = await Promise.all(
+        createPermissions.permissions.map(async per => {
+            if (per._id) {
+                await this.permissionService.findByIdAndUpdate(per._id, per);
+                return per._id;
             } else {
-                const created = await this.permissionService.create({
-                    subject: incomingPermission.subject,
-                    action: incomingPermission.action
-                })
-                updatedPermissionIds.push(created._id)
+                const created = await this.permissionService.create(per);
+                return created._id;
             }
-        }
-        return await this.rolService.findByIdAndUpdate(id, {
-            permissions: updatedPermissionIds
         })
+    );
+
+    return await this.rolService.findByIdAndUpdate(id, { permissions });
+}
+
+
+    async findOne(role: any) {
+        return await this.rolService.findById(role).populate(
+            {
+                path: 'permissions',
+                populate: [
+                    { path: 'action' },
+                    { path: 'subject' }
+                ]
+            }
+        );
     }
 
 }

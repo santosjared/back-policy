@@ -8,13 +8,13 @@ export type UsersDocument = HydratedDocument<Users>
 export class Users {
     @Prop()
     lastName: string
-    @Prop()
+    @Prop({unique:true})
     email: string
     @Prop()
     phone: string
     @Prop()
     password: string
-    @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol', required:true})
+    @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol'})
     rol:Rol
     @Prop()
     grade: string
@@ -32,7 +32,7 @@ export class Users {
     ci:string
     @Prop()
     gender:string
-    @Prop({required:true})
+    @Prop()
     address:string
     @Prop({type:String, default:'activo'})
     status:string

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFiles, UseInterceptors, UseGuards } from '@nestjs/common';
 import { ComplaintsClientService } from './complaints.service';
 import { ComplaintsClientDto } from './dto/create-complaints.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -8,8 +8,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { NotificationGatewey } from 'src/notifications/gateway';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('complaints-client')
+// @ApiBearerAuth()
 export class ComplaintsClientController {
 
   constructor(private readonly complaitsService: ComplaintsClientService,
@@ -70,11 +73,12 @@ export class ComplaintsClientController {
     return response
   }
 
+  // @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Query('userId') userId: string, @Query('status') status?: string) {
     return await this.complaitsService.findComplaintsOfUser(userId, status);
   }
-
+  // @UseGuards(JwtAuthGuard)
   @Get('complaints-with-status')
   async findAllWithStatus(
     @Query('status') status: string,
@@ -90,7 +94,7 @@ export class ComplaintsClientController {
     }
     return await this.complaitsService.findAllWithStatus(status);
   }
-
+  // @UseGuards(JwtAuthGuard)
   @Delete('complaints-refused/:id')
   async refusedComplaint(@Param('id') id: string){
     return await this.complaitsService.refusedComplaint(id)

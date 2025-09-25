@@ -39,11 +39,11 @@ export class UsersService {
         ]
       }
 
-      const result = await this.userService.find(query).populate('rol').skip(filters.skip).limit(filters.limit).exec()
+      const result = await this.userService.find(query).select('-password').populate('rol').skip(filters.skip).limit(filters.limit).exec()
       const total = await this.userService.countDocuments(query)
       return { result, total };
     }
-    const result = await this.userService.find().populate('rol')
+    const result = await this.userService.find().select('-password').populate('rol')
     const total = await this.userService.countDocuments()
     return { result, total };
   }
@@ -69,4 +69,7 @@ async update(id: string, updateUserDto: UpdateUserDto) {
   async up(id: string){
     return await this.userService.findByIdAndUpdate(id,{status:'activo'})
   }
+   async checkEmail(email:string){
+        return await this.userService.findOne({email}) !==null;
+    }
 }

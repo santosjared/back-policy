@@ -1,6 +1,5 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { ComplaintsService } from './complaints.service';
-import { UpdateDenunciaDto } from './dto/update-denuncia.dto';
 import { CreateTypeComplaintsDto } from './dto/create-type-complaints.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -9,11 +8,19 @@ import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs'
 import { fileFilter } from 'src/utils/validator/file';
 import { UpdateTypeComplaintsDto } from './dto/update-type-complaints.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { PermissionsGuard } from 'src/casl/guards/permissions.guard';
+import { Action } from 'src/config/acl';
+import { CheckAbilities } from 'src/casl/decorators/permission.decorator';
 
 @Controller('complaints')
+// @ApiBearerAuth()
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: Action.Create, subject: 'complaints' })
   @Post()
   @UseInterceptors(
       FileInterceptor('file',
@@ -50,26 +57,26 @@ export class ComplaintsController {
     return this.complaintsService.create({...createTypeComplaintsDto, image});
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.complaintsService.findAll();
-  // }
-
+  // @UseGuards(JwtAuthGuard)
   @Get('type-complaints')
   async typeComplaints (@Query() filters:any) {
     return await this.complaintsService.findAllTypeComplaint(filters)
   }
 
+  // @UseGuards(JwtAuthGuard)
   @Get('kin')
   async Kin(){
     return await this.complaintsService.findAllKing()
   }
   
+  // @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.complaintsService.findOne(+id);
   }
 
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: Action.Update, subject: 'complaints' })
   @Put(':id')
   @UseInterceptors(
       FileInterceptor('file',
@@ -106,6 +113,8 @@ export class ComplaintsController {
     return this.complaintsService.update(id, {...updateTypeComplaintDto, image});
   }
 
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: Action.Delete, subject: 'complaints' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.complaintsService.remove(id);

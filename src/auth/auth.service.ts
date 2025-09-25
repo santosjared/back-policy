@@ -20,6 +20,7 @@ export class AuthService {
     const user = await this.findUser(createAuthDto.email);
     if (user) {
       const passwordHash = await bcrypt.compare(createAuthDto.password, user.password);
+      delete user.password;
       if (passwordHash) {
         const payload = { sub: user._id }
         const access_token = this.jwtService.sign(payload);
@@ -37,7 +38,7 @@ export class AuthService {
         return {
           access_token,
           refresh_token,
-          userData: { name: user.name, lastName: user.lastName, email: user.email, _id: user._id, role: user.rol },
+          user
         };
       }
       throw new UnauthorizedException('password incorect')
@@ -59,7 +60,7 @@ export class AuthService {
         ]
       }
     });
-    if (user) return { name: `${user.firstName} ${user.lastName}`, lastName: `${user.paternalSurname} ${user.maternalSurname}`, email: user.email, _id: user._id, rol: user.rol, password: user.password };
+    if (user) return { name: `${user.firstName} ${user.lastName}`, lastName: `${user.paternalSurname} ${user.maternalSurname}`, email: user.email, _id: user._id, rol: user.rol, password: user.password, provider:null };
 
     const client = await this.clienteService.findOne(query).populate({
       path: 'rol',
@@ -82,31 +83,26 @@ export class AuthService {
       const getToken = await this.singIn.findOne({ userId: payload.sub });
 
       if (!getToken) {
-        throw new BadRequestException('Token no válido');
+        throw new UnauthorizedException('Token no válido');
       }
 
       const user = await this.findUser(payload.sub);
 
-      const access_token = this.jwtService.sign({ sub: payload.sub });
+      delete user.password
+      const access_token = this.jwtService.sign({sub: user._id});
       const refresh_token = this.jwtService.sign(
-        { sub: payload.sub },
+        {sub: user._id},
         { expiresIn: '30d' },
       );
 
       return {
         access_token,
         refresh_token,
-        userData: {
-          name: user.name,
-          lastName: user.lastName,
-          email: user.email,
-          _id: user._id,
-          role: user.rol
-        },
+        user
       };
     } catch (e) {
       console.error('Error en refresco de token: ', e);
-      throw new BadRequestException('Token no válido');
+      throw new UnauthorizedException('Token no válido');
     }
   }
 

@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Denuncias, DenunciasSchema } from './schema/denuncias.schema';
 import { TypeComplaint, TypeComplaintSchema } from './schema/type-complaints.schema';
 import { Kin, KinSchema } from './schema/kin.schema';
+import { CaslModule } from 'src/casl/casl.module';
 
 @Module({
   imports:[MongooseModule.forFeature([{
@@ -22,7 +23,8 @@ import { Kin, KinSchema } from './schema/kin.schema';
       name: Kin.name,
       schema:KinSchema
     }
-  ])
+  ]),
+  CaslModule
 ],
   controllers: [ComplaintsController],
   providers: [ComplaintsService],

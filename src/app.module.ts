@@ -11,9 +11,8 @@ import getConfig from './config/environment'
 import { complaintsClientModule } from './clients/complaints/complaints.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { ActionModule } from './action/action.module';
-import { SubjectModule } from './subject/subject.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { ShitsModule } from './shits/shits.module';
 
 @Module({
   imports: [ ConfigModule.forRoot({
@@ -36,9 +35,8 @@ import { PermissionsModule } from './permissions/permissions.module';
       rootPath: join(__dirname, '..', 'uploads', 'videos'),
       serveRoot: '/videos',
     }),
-    ActionModule,
-    SubjectModule,
     PermissionsModule,
+    ShitsModule,
   ],
 })
 export class AppModule {}

@@ -12,9 +12,9 @@ import { UpdateTypeComplaintsDto } from './dto/update-type-complaints.dto';
 @Injectable()
 export class ComplaintsService {
   constructor(
-  @InjectModel(TypeComplaint.name) private readonly typeComplaintsService:Model<TypeComplaintsDocument>,
-  @InjectModel(Kin.name) private readonly kinService:Model<KinDocument>
-){}
+    @InjectModel(TypeComplaint.name) private readonly typeComplaintsService: Model<TypeComplaintsDocument>,
+    @InjectModel(Kin.name) private readonly kinService: Model<KinDocument>
+  ) { }
   async create(createTypeComplaintsDto: CreateTypeComplaintsDto) {
     return await this.typeComplaintsService.create(createTypeComplaintsDto);
   }
@@ -27,25 +27,40 @@ export class ComplaintsService {
     return `This action returns a #${id} denuncia`;
   }
 
- async update(id: string, updateTypeComplaintDto: UpdateTypeComplaintsDto) {
-    return await this.typeComplaintsService.findByIdAndUpdate(id,updateTypeComplaintDto);
+  async update(id: string, updateTypeComplaintDto: UpdateTypeComplaintsDto) {
+    return await this.typeComplaintsService.findByIdAndUpdate(id, updateTypeComplaintDto);
   }
 
   async remove(id: string) {
     return await this.typeComplaintsService.findByIdAndDelete(id);
   }
-  async findAllTypeComplaint (filters:any) {
-    if(filters && filters.filter){
-      const query = {
-        $or: [
-          { name: { $regex: filters.filter, $options: 'i' } },
-        ]
-      }
-      return await this.typeComplaintsService.find(query);
-    }
-    return await this.typeComplaintsService.find();
+  async findAllTypeComplaint(filters: any = {}) {
+    
+    const { name = '', skip = 0, limit = 10 } = filters
+    const query = {
+      $and: [
+        {
+          name: {
+            $regex: name,
+            $options: 'i'
+          }
+        },
+        {
+          name: {
+            $not: {
+              $regex: '^otro$',
+              $options: 'i'
+            }
+          }
+        }
+      ]
+    };
+
+    const result = await this.typeComplaintsService.find(query).skip(skip).limit(limit).exec();
+    const total = await this.typeComplaintsService.countDocuments(query);
+    return { result, total }
   }
-  async findAllKing () {
+  async findAllKing() {
     return await this.kinService.find();
   }
 }

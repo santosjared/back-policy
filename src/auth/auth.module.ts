@@ -6,11 +6,12 @@ import { Users, UsersSchema } from 'src/users/schema/users.schema';
 import { JwtModule} from '@nestjs/jwt';
 import  environment  from 'src/config/environment'
 import { ConfigModule } from '@nestjs/config';
-import getConfig from 'src/config/environment'
 import { Client, ClientSchema } from 'src/clients/schema/clients.schema';
 import { SingIn, SingInSchema } from './schema/sing-in.schema';
 import { GoogleAuthService } from './google-auth.service';
 import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
+import { JwtStrategy } from './jwt.strategy';
+import getConfig from 'src/config/environment'
 
 @Module({
   imports:[
@@ -41,6 +42,6 @@ import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
   }])
 ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleAuthService],
+  providers: [AuthService, GoogleAuthService, JwtStrategy],
 })
 export class AuthModule {}

@@ -57,10 +57,11 @@ export class GoogleAuthService {
                 { $set: { updatedAt: new Date() } }
             );
         }
+        delete user.password
         return {
             access_token,
             refresh_token,
-            userData: { name: user.name, lastName: user.lastName, email: user.email, _id: user._id, role: user.rol },
+            user,
         };
     }
 }

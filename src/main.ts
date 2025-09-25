@@ -11,8 +11,7 @@ async function bootstrap() {
     .setTitle('API REST for policy')
     .setDescription('Esto es un api para manejo de policias')
     .setVersion('1.0')
-    .addTag('auth')
-    .addTag('users')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('policy', app, documentFactory);

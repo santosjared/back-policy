@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsArray, IsString } from 'class-validator'
+import { IsArray, IsOptional, IsString } from 'class-validator'
 
 export class CreatePermissionDto {
   @ApiProperty({ type: () => [PermissionItemDto] })
@@ -10,9 +10,14 @@ export class CreatePermissionDto {
 export class PermissionItemDto {
   @ApiProperty({ type: [String] })
   @IsArray()
-  action: string[] // IDs de acciones
+  action: string[]
 
   @ApiProperty()
   @IsString()
-  subject: string // ID de subject
+  subject: string
+
+  @IsOptional()
+  @IsString()
+  _id:string
+
 }
