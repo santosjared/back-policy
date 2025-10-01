@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsDate, IsString } from "class-validator";
+import { IsArray, IsOptional, IsString } from "class-validator";
 
 export class CreateShitDto {
 
@@ -29,4 +29,34 @@ class HourRange {
     @ApiProperty()
     @IsString()
     hrs_s: string
+    @ApiProperty()
+    @IsOptional()
+    @IsArray()
+    @Type(() => Services)
+    services: Services[]
+}
+class Services {
+    @ApiProperty()
+    @IsString()
+    name: string
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    otros: string
+
+    @ApiProperty()
+    @IsArray()
+    @IsOptional()
+    users: Users[]
+}
+
+class Users{
+
+    @IsString()
+    @IsOptional()
+    cargo:string
+    @IsString()
+    @IsOptional()
+    user:string
 }
