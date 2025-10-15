@@ -27,6 +27,14 @@ export class ShitsController {
     return await this.shitsService.users();
   }
 
+   @Get('services')
+  async findAllServices() {
+    return await this.shitsService.findAllServices();
+  }
+   @Get('zones')
+  async findAllZones() {
+    return await this.shitsService.findAllZones();
+  }
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.shitsService.findOne(id);

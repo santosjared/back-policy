@@ -8,8 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { NotificationGatewey } from 'src/notifications/gateway';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
 
 @Controller('complaints-client')
 // @ApiBearerAuth()
@@ -75,24 +74,8 @@ export class ComplaintsClientController {
 
   // @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query('userId') userId: string, @Query('status') status?: string) {
-    return await this.complaitsService.findComplaintsOfUser(userId, status);
-  }
-  // @UseGuards(JwtAuthGuard)
-  @Get('complaints-with-status')
-  async findAllWithStatus(
-    @Query('status') status: string,
-    @Query('skip') skip:string,
-    @Query('limit') limit:string,
-    @Query('name') name:string,
-    @Query('date') date:string
-  ) {
-    if(skip && limit){
-       const skipNumber = parseInt(skip, 10);
-    const limitNumber = parseInt(limit, 10);
-    return await this.complaitsService.findAllWithStatus(status, skipNumber, limitNumber, name, date);
-    }
-    return await this.complaitsService.findAllWithStatus(status);
+  async findAll(@Query() filters: FiltersComplaintsDto) {
+    return await this.complaitsService.findAll(filters);
   }
   // @UseGuards(JwtAuthGuard)
   @Delete('complaints-refused/:id')

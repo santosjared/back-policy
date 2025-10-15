@@ -6,26 +6,15 @@ import { ComplaintsClientService } from './complaints.service';
 import { NotificationGatewey } from 'src/notifications/gateway';
 import { Client, ClientSchema } from '../schema/clients.schema';
 import { TypeComplaint, TypeComplaintSchema } from 'src/complaints/schema/type-complaints.schema';
+import { Kin, KinSchema } from 'src/complaints/schema/kin.schema';
 
 @Module({
     imports: [
         MongooseModule.forFeature([
-            {
-                name: ComplaintsClient.name,
-                schema: ComplaintsClientSchema
-            }
-        ]),
-        MongooseModule.forFeature([
-            {
-                name:Client.name,
-                schema:ClientSchema
-            }
-        ]),
-        MongooseModule.forFeature([
-            {
-                name:TypeComplaint.name,
-                schema:TypeComplaintSchema
-            }
+            { name: ComplaintsClient.name, schema: ComplaintsClientSchema },
+            { name: Client.name, schema: ClientSchema },
+            { name: TypeComplaint.name, schema: TypeComplaintSchema },
+            { name: Kin.name, schema: KinSchema }
         ])
     ],
     controllers:[ComplaintsClientController],

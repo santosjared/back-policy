@@ -3,6 +3,10 @@ import { SeedModule } from './seed.module';
 import { UserSeedService } from './user-seed.service';
 import { DenunciasSeedService } from './denuncias-seed.service';
 import { KindsSeedService } from './kinds-seed.service';
+import { ServicesSeedService } from './services-seed.service';
+import { ZoneSeedService } from './zone-seed.service';
+import { TypeSeedService } from './type-seed.service';
+import { MarkerSeedService } from './marker-seed.services';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(SeedModule);
@@ -11,10 +15,18 @@ async function bootstrap() {
     const userSeedService = app.get(UserSeedService);
     const denunciasSeedService = app.get(DenunciasSeedService);
     const kindsSeedService = app.get(KindsSeedService);
+    const servicesSeedService = app.get(ServicesSeedService);
+    const zoneSeedService = app.get(ZoneSeedService)
+    const typeSeedService = app.get(TypeSeedService)
+    const markerSeedService = app.get(MarkerSeedService)
 
     await userSeedService.seed();
     await denunciasSeedService.seed();
     await kindsSeedService.seed();
+    await servicesSeedService.seed();
+    await zoneSeedService.seed();
+    await typeSeedService.seed();
+    await markerSeedService.seed();
 
     console.log('✅ Seed executed successfully.');
   } catch (error) {
