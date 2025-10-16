@@ -34,8 +34,22 @@ export class ComplaintsClientService {
     }
   }
   async findAll(filters: FiltersComplaintsDto) {
-    const { field = '', status = '', skip = 0, limit = 10 } = filters;
+  const { field = '', status = '', skip = 0, limit = 10 } = filters;
 
+  const query: any = {};
+
+  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
+  if (isDate) {
+    const startDate = new Date(field);
+    const endDate = new Date(field);
+    endDate.setDate(endDate.getDate() + 1);
+
+    query.createdAt = {
+      $gte: startDate,
+      $lt: endDate,
+    };
+  } else {
+  
     const matchedUser = await this.userService.find({
       $or: [
         { name: { $regex: field, $options: 'i' } },
@@ -47,44 +61,33 @@ export class ComplaintsClientService {
 
     const matchedComplaints = await this.typeComplaintService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
     const matchedKin = await this.kinService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
-    const query: any = {
-      $or: [
-        { place: { $regex: field, $options: 'i' } },
-        { otherComplaints: { $regex: field, $options: 'i' } },
-        { otherAggressor: { $regex: field, $options: 'i' } },
-        { otherVictim: { $regex: field, $options: 'i' } },
-        { userId: { $in: matchedUser.map(r => r._id) } },
-        { complaints: { $in: matchedComplaints.map(r => r._id) } },
-        { aggressor: { $in: matchedKin.map(r => r._id) } },
-        { victim: { $in: matchedKin.map(r => r._id) } },
-      ],
-    };
 
-    if (status) {
-      query.status = status;
-    }
-
-     const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
-    if (isDate) {
-      const startDate = new Date(field);
-      const endDate = new Date(field);
-      endDate.setDate(endDate.getDate() + 1);
-
-      query.createdAt = {
-        $gte: startDate,
-        $lt: endDate,
-      };
-    }
-    const total = await this.complaintsService.countDocuments(query).exec();
-    const result = await this.complaintsService.find(query)
-      .populate('userId complaints aggressor victim')
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .exec();
-
-    return { total, result };
+    query.$or = [
+      { place: { $regex: field, $options: 'i' } },
+      { otherComplaints: { $regex: field, $options: 'i' } },
+      { otherAggressor: { $regex: field, $options: 'i' } },
+      { otherVictim: { $regex: field, $options: 'i' } },
+      { userId: { $in: matchedUser.map(r => r._id) } },
+      { complaints: { $in: matchedComplaints.map(r => r._id) } },
+      { aggressor: { $in: matchedKin.map(r => r._id) } },
+      { victim: { $in: matchedKin.map(r => r._id) } },
+    ];
   }
+
+  if (status) {
+    query.status = status;
+  }
+
+  const total = await this.complaintsService.countDocuments(query).exec();
+  const result = await this.complaintsService.find(query)
+    .populate('userId complaints aggressor victim')
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return { total, result };
+}
 
   async findComplaintsOfUser(userId: string, status: string) {
     if (!isValidObjectId(userId)) {
