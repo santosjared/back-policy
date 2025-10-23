@@ -16,7 +16,7 @@ export class MarkerSeedService {
     
     async seed(){
                 try {
-            console.log('Running seed...');
+            console.log('Running seed markers...');
                     
             const count = await this.MarkerModel.countDocuments();
             if (count === 0) {
@@ -30,7 +30,7 @@ export class MarkerSeedService {
                 console.log('Markers already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error markers:', error);
         }
     }
 }

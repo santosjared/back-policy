@@ -14,6 +14,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { PermissionsModule } from './permissions/permissions.module';
 import { ShitsModule } from './shits/shits.module';
 import { PatrolsModule } from './patrols/patrols.module';
+import { AtendidosModule } from './atendidos/atendidos.module';
 
 @Module({
   imports: [ ConfigModule.forRoot({
@@ -39,6 +40,7 @@ import { PatrolsModule } from './patrols/patrols.module';
     PermissionsModule,
     ShitsModule,
     PatrolsModule,
+    AtendidosModule,
   ],
 })
 export class AppModule {}

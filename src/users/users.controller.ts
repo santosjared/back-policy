@@ -32,6 +32,16 @@ export class UsersController {
     return await this.usersService.findAll(filters);
   }
 
+  @Get('grades')
+  async findGrade() {
+    return await this.usersService.findGrade();
+  }
+
+  @Get('posts')
+  async findPost() {
+    return await this.usersService.findPost();
+  }
+
   // @UseGuards(JwtAuthGuard, PermissionsGuard)
   // @CheckAbilities({ action: Action.Read, subject: 'users' })
   @Get(':id')

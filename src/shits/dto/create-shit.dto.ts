@@ -1,12 +1,24 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import { IsArray, IsOptional, IsString } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsArray, IsOptional, IsString, Length } from "class-validator";
 
 export class CreateShitDto {
 
     @ApiProperty()
+    @IsString({ message: 'El nombre del supervisor debe ser una cadena de texto.' })
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    @Length(3, 62, { message: 'El nombre del supervisor debe tener entre 3 y 62 caracteres.' })
+    supervisor: string;
+
+    @ApiProperty()
     @IsString()
-    supervisor: string
+    grade: string
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString({ message: 'El otro grado del supervisor debe ser una cadena de texto.' })
+    @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+    otherGrade: string
 
     @ApiProperty()
     @IsString()
@@ -29,6 +41,7 @@ class HourRange {
     @ApiProperty()
     @IsString()
     hrs_s: string
+
     @ApiProperty()
     @IsOptional()
     @IsArray()
@@ -74,6 +87,7 @@ class Users {
     @IsString()
     @IsOptional()
     cargo: string
+
     @IsString()
     @IsOptional()
     user: string

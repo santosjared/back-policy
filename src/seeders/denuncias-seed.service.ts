@@ -60,7 +60,7 @@ export class DenunciasSeedService {
 
     async seed() {
         try {
-            console.log('Running seed...');
+            console.log('Running seed denuncias...');
 
             const count = await this.denunciasModel.countDocuments();
             if (count === 0) {
@@ -74,7 +74,7 @@ export class DenunciasSeedService {
                 console.log('Denuncias already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error denuncias:', error);
         }
     }
 }

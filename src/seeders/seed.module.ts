@@ -22,6 +22,10 @@ import { Marker, MarkerSchema } from 'src/patrols/schema/marker.schema';
 import { Type, TypeSchema } from 'src/patrols/schema/type.schema';
 import { MarkerSeedService } from './marker-seed.services';
 import { TypeSeedService } from './type-seed.service';
+import { Grade, GradeSchema } from 'src/users/schema/grade.schema';
+import { GradeSeedService } from './grade-seed.service';
+import { Post, PostSchema } from 'src/users/schema/post.schema';
+import { PostSeedService } from './post-seed.service';
 
 
 @Module({
@@ -42,8 +46,20 @@ import { TypeSeedService } from './type-seed.service';
       { name: Zone.name, schema: ZoneSChema },
       { name: Marker.name, schema: MarkerSchema },
       { name: Type.name, schema: TypeSchema },
+      { name: Grade.name, schema: GradeSchema },
+      { name: Post.name, schema:PostSchema },
     ]),
   ],
-  providers: [UserSeedService, DenunciasSeedService, KindsSeedService, ServicesSeedService, ZoneSeedService, TypeSeedService, MarkerSeedService],
+  providers: [
+    UserSeedService, 
+    DenunciasSeedService, 
+    KindsSeedService, 
+    ServicesSeedService, 
+    ZoneSeedService, 
+    TypeSeedService, 
+    MarkerSeedService, 
+    GradeSeedService,
+    PostSeedService,
+  ],
 })
 export class SeedModule { }

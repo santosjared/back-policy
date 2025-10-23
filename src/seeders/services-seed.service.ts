@@ -17,7 +17,7 @@ export class ServicesSeedService {
     
     async seed(){
                 try {
-            console.log('Running seed...');
+            console.log('Running seed services...');
 
             const count = await this.ServicesModel.countDocuments();
             if (count === 0) {
@@ -31,7 +31,7 @@ export class ServicesSeedService {
                 console.log('Services already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error services:', error);
         }
     }
 }

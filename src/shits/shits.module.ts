@@ -9,6 +9,7 @@ import { Services, ServicesSchema } from './schema/services.schema';
 import { UserServices, UserServicesSchema } from './schema/user-services.schema';
 import { UserShift, UserShiftSchema } from './schema/user-shift.schema';
 import { Zone, ZoneSChema } from './schema/zone.schema';
+import { Grade, GradeSchema } from 'src/users/schema/grade.schema';
 
 @Module({
   imports: [MongooseModule.forFeature([
@@ -19,6 +20,7 @@ import { Zone, ZoneSChema } from './schema/zone.schema';
     { name: UserServices.name, schema: UserServicesSchema },
     { name: UserShift.name, schema: UserShiftSchema },
     { name: Zone.name, schema: ZoneSChema },
+    { name: Grade.name, schema: GradeSchema }
   ])],
   controllers: [ShitsController],
   providers: [ShitsService],

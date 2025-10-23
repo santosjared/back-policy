@@ -10,6 +10,8 @@ export class UserShift {
     cargo: string
     @Prop({ type: mongoose.SchemaTypes.ObjectId, ref: 'Users' })
     user: Users
+    @Prop({type:String, default:'active'})
+    status:string
 }
 
 export const UserShiftSchema = SchemaFactory.createForClass(UserShift);

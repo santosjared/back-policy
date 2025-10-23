@@ -15,7 +15,7 @@ export class TypeSeedService {
     
     async seed(){
                 try {
-            console.log('Running seed...');
+            console.log('Running seed types...');
                     
             const count = await this.TypeModel.countDocuments();
             if (count === 0) {
@@ -29,7 +29,7 @@ export class TypeSeedService {
                 console.log('Types already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error types:', error);
         }
     }
 }

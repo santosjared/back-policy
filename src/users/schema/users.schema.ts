@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Rol } from 'src/roles/schema/roles.schema';
+import { Grade } from './grade.schema';
+import { Post } from './post.schema';
 
 export type UsersDocument = HydratedDocument<Users>
 
@@ -16,8 +18,8 @@ export class Users {
     password: string
     @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol'})
     rol:Rol
-    @Prop()
-    grade: string
+    @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Grade'})
+    grade: Grade
     @Prop()
     paternalSurname: string
     @Prop()
@@ -26,8 +28,8 @@ export class Users {
     firstName: string
     @Prop()
     exp: string
-    @Prop()
-    post: string
+    @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Post'})
+    post: Post
     @Prop()
     ci:string
     @Prop()

@@ -22,7 +22,7 @@ export class UserSeedService {
 
   async seed() {
     try {
-      console.log('Running seed...');
+      console.log('Running seed users...');
 
       const permissions:Permissions[] = [
         { subject: 'all', action: ['manage'] },
@@ -65,7 +65,7 @@ export class UserSeedService {
 
       console.log('Seed complete admin ✅');
     } catch (error) {
-      console.error('Seed error:', error);
+      console.error('Seed error users:', error);
     }
   }
 }

@@ -17,6 +17,8 @@ export class Patrols {
     type:Type
     @Prop()
     imageUrl:string
+    @Prop({type:String, default:'active'})
+    status:string
 }
 
 export const PatrolsSchema = SchemaFactory.createForClass(Patrols);

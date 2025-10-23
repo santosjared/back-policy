@@ -39,7 +39,7 @@ export class KindsSeedService {
     
     async seed(){
                 try {
-            console.log('Running seed...');
+            console.log('Running seed kinds...');
 
             const count = await this.kindModel.countDocuments();
             if (count === 0) {
@@ -53,7 +53,7 @@ export class KindsSeedService {
                 console.log('kinds already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error kinds:', error);
         }
     }
 }

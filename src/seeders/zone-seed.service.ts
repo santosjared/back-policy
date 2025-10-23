@@ -20,7 +20,7 @@ export class ZoneSeedService {
     
     async seed(){
                 try {
-            console.log('Running seed...');
+            console.log('Running seed zones...');
 
             const count = await this.zoneModel.countDocuments();
             if (count === 0) {
@@ -34,7 +34,7 @@ export class ZoneSeedService {
                 console.log('zones already exist. Seed skipped.');
             }
         } catch (error) {
-            console.error('Seed error:', error);
+            console.error('Seed error zones:', error);
         }
     }
 }

@@ -3,7 +3,7 @@ import { CreateShitDto } from './dto/create-shit.dto';
 import { UpdateShitDto } from './dto/update-shit.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Shits, ShitsDocument } from './schema/shits.schema';
-import { Model } from 'mongoose';
+import { model, Model } from 'mongoose';
 import { FilterShitDto } from './dto/filter-shit.dto';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
 import { Services, ServicesDocument } from './schema/services.schema';
@@ -11,6 +11,7 @@ import { Zone, ZoneDocument } from './schema/zone.schema';
 import { HourRange, HourRangeDocument } from './schema/hour-rage.schema';
 import { UserServices, UserServicesDocument } from './schema/user-services.schema';
 import { UserShift, UserShiftDocument } from './schema/user-shift.schema';
+import { Grade, GradeDocument } from 'src/users/schema/grade.schema';
 
 @Injectable()
 export class ShitsService {
@@ -21,17 +22,22 @@ export class ShitsService {
     @InjectModel(HourRange.name) private hourRangeModel: Model<HourRangeDocument>,
     @InjectModel(UserServices.name) private userServicesModel: Model<UserServicesDocument>,
     @InjectModel(UserShift.name) private userShiftModel: Model<UserShiftDocument>,
+    @InjectModel(Grade.name) private gradeModel: Model<GradeDocument>,
   ) { }
 
   async create(createShitDto: CreateShitDto) {
+    if (createShitDto.otherGrade) {
+      const newGrade = await this.gradeModel.create({ name: createShitDto.otherGrade })
+      createShitDto.grade = newGrade._id.toString()
+    }
     const updateHrs = await Promise.all(
       createShitDto.hrs.map(async (hr) => {
         const updateServices = await Promise.all(
           hr?.services?.map(async (service) => {
             const updateShiftUser = await Promise.all(
-              service?.users?.map( async (user) => {
+              service?.users?.map(async (user) => {
                 const userDb = await this.userShiftModel.findById(user._id)
-                if(userDb){
+                if (userDb) {
                   const { _id } = await this.userShiftModel.findByIdAndUpdate(user._id, user);
                   return _id.toString()
                 }
@@ -51,54 +57,45 @@ export class ShitsService {
               delete data.otherZone;
             }
             const serviceDB = await this.userServicesModel.findById(data._id);
-            if(serviceDB){
-              const { _id } = await this.userServicesModel.findByIdAndUpdate(data._id, {...data, users:updateShiftUser})
+            if (serviceDB) {
+              const { _id } = await this.userServicesModel.findByIdAndUpdate(data._id, { ...data, users: updateShiftUser })
               return _id.toString()
             }
-            const { _id } = await this.userServicesModel.create({...data, users:updateShiftUser})
+            const { _id } = await this.userServicesModel.create({ ...data, users: updateShiftUser })
             return _id.toString()
-          })||[]
+          }) || []
         )
         const hrDB = await this.hourRangeModel.findById(hr._id);
-        if(hrDB){
-          const { _id } = await this.hourRangeModel.findByIdAndUpdate(hr._id, {...hr, services:updateServices});
+        if (hrDB) {
+          const { _id } = await this.hourRangeModel.findByIdAndUpdate(hr._id, { ...hr, services: updateServices });
           return _id.toString()
         }
-        const { _id } = await this.hourRangeModel.create({...hr, services:updateServices});
+        const { _id } = await this.hourRangeModel.create({ ...hr, services: updateServices });
         return _id.toString()
-      })||[]
+      }) || []
     )
-    return await this.shitsModel.create({...createShitDto, hrs:updateHrs});
+    return await this.shitsModel.create({ ...createShitDto, hrs: updateHrs });
   }
 
   async findAll(filters: any) {
     const { field = '', skip = 0, limit = 10 } = filters
 
-    let matchedUserIds: string[] = []
-
-    if (field) {
-      const matchedUsers = await this.usersModel.find({
-        $or: [
-          { firstName: { $regex: field, $options: 'i' } },
-          { paternalSurname: { $regex: field, $options: 'i' } },
-          { maternalSurname: { $regex: field, $options: 'i' } }
-        ]
-      }).select('_id')
-      matchedUserIds = matchedUsers.map(u => u._id.toString())
-    }
+    const matchedGrades = await this.gradeModel.find({ name: { $regex: field, $options: 'i' } }).select('_id')
 
     const query: any = {
       $or: [
+        { grade: { $in: matchedGrades.map(r => r._id) } },
         { date: { $regex: field, $options: 'i' } },
-        { supervisor: { $in: matchedUserIds } },
+        { supervisor: { $regex: field, $options: 'i' } },
       ]
     }
 
     const total = await this.shitsModel.countDocuments(query).exec()
     const result = await this.shitsModel
       .find(query)
-      .populate('supervisor', '-password')
+      .populate('grade')
       .populate('hrs')
+      .select('-createdAt -updatedAt -__v')
       .sort({ createdAt: -1 })
       .skip(Number(skip))
       .limit(Number(limit))
@@ -107,54 +104,70 @@ export class ShitsService {
     return { total, result }
   }
 
- async findOne(id: string) {
-  return await this.shitsModel.findById(id)
-    .populate('supervisor', '-password')
-    .populate({
-      path: 'hrs',
-      model: 'HourRange',
-      select: '-__v',
-      populate: {
-        path: 'services',
-        model: 'UserServices',
+  async findOne(id: string) {
+    return await this.shitsModel.findById(id)
+      .populate('grade')
+      .populate({
+        path: 'hrs',
+        model: 'HourRange',
         select: '-__v',
-        populate: [
-          {
-            path: 'users',
-            model: 'UserShift',
-            select: '-__v',
-            populate: {
-              path: 'user',
-              model: 'Users',
+        populate: {
+          path: 'services',
+          model: 'UserServices',
+          select: '-__v',
+          populate: [
+            {
+              path: 'users',
+              model: 'UserShift',
+              select: '-__v',
+              populate: {
+                path: 'user',
+                model: 'Users',
+                select: '-__v',
+                populate: [
+                  {
+                    path: 'grade',
+                    model: 'Grade',
+                    select: '-__v',
+                  },
+                  {
+                    path: 'post',
+                    model: 'Post',
+                    select: '-__v',
+                  },
+
+                ],
+              }
+            },
+            {
+              path: 'zone',
+              model: 'Zone',
+              select: '-__v'
+            },
+            {
+              path: 'services',
+              model: 'Services',
               select: '-__v'
             }
-          },
-          {
-            path: 'zone',
-            model: 'Zone',
-            select: '-__v'
-          },
-          {
-            path: 'services',
-            model: 'Services',
-            select: '-__v'
-          }
-        ]
-      }
-    }).select('-__v -createdAt -updatedAt')
-    .exec();
-}
+          ]
+        }
+      }).select('-__v -createdAt -updatedAt')
+      .exec();
+  }
 
   async update(id: string, updateShitDto: UpdateShitDto) {
-
+    if (updateShitDto.otherGrade) {
+      const newGrade = await this.gradeModel.create({ name: updateShitDto.otherGrade })
+      updateShitDto.grade = newGrade._id.toString()
+    }
     const updateHrs = await Promise.all(
       updateShitDto.hrs.map(async (hr) => {
         const updateServices = await Promise.all(
           hr?.services?.map(async (service) => {
             const updateShiftUser = await Promise.all(
-              service?.users?.map( async (user) => {
+              service?.users?.map(async (user) => {
                 const userDb = await this.userShiftModel.findById(user._id)
-                if(userDb){
+                if (userDb) {
                   const { _id } = await this.userShiftModel.findByIdAndUpdate(user._id, user);
                   return _id
                 }
@@ -174,25 +187,25 @@ export class ShitsService {
               delete data.otherZone;
             }
             const serviceDB = await this.userServicesModel.findById(data._id);
-            if(serviceDB){
-              const { _id } = await this.userServicesModel.findByIdAndUpdate(data._id, {...data, users:updateShiftUser})
+            if (serviceDB) {
+              const { _id } = await this.userServicesModel.findByIdAndUpdate(data._id, { ...data, users: updateShiftUser })
               return _id
             }
-            const { _id } = await this.userServicesModel.create({...data, users:updateShiftUser})
+            const { _id } = await this.userServicesModel.create({ ...data, users: updateShiftUser })
             return _id
-          })||[]
+          }) || []
         )
         const hrDB = await this.hourRangeModel.findById(hr._id);
-        if(hrDB){
-          const { _id } = await this.hourRangeModel.findByIdAndUpdate(hr._id, {...hr, services:updateServices});
+        if (hrDB) {
+          const { _id } = await this.hourRangeModel.findByIdAndUpdate(hr._id, { ...hr, services: updateServices });
           return _id
         }
-        const { _id } = await this.hourRangeModel.create({...hr, services:updateServices});
+        const { _id } = await this.hourRangeModel.create({ ...hr, services: updateServices });
         return _id
-      })||[]
+      }) || []
     )
 
-    return await this.shitsModel.findByIdAndUpdate(id, {...updateShitDto, hrs:updateHrs}, { new: true }).exec();
+    return await this.shitsModel.findByIdAndUpdate(id, { ...updateShitDto, hrs: updateHrs }, { new: true }).exec();
   }
 
 
@@ -201,7 +214,7 @@ export class ShitsService {
   }
 
   async users() {
-    return await this.usersModel.find({ status: 'activo' }).select('-password -__v').exec();
+    return await this.usersModel.find({ status: 'activo' }).populate('grade post').select('-password -__v').exec();
   }
   async findAllServices() {
     return await this.servicesModel.find().select('-__v');
