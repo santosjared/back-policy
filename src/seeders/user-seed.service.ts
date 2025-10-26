@@ -59,7 +59,6 @@ export class UserSeedService {
           email: 'admin@gmail.com',
           password: hashedPassword,
           rol: adminRole._id,
-          grade:'Admistrador',
         });
       }
 
