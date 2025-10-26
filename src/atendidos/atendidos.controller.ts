@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, Put } from '@nestjs/common';
 import { AtendidosService } from './atendidos.service';
 import { CreateAtendidoDto } from './dto/create-atendido.dto';
 import { UpdateAtendidoDto } from './dto/update-atendido.dto';
@@ -9,8 +9,8 @@ export class AtendidosController {
   constructor(private readonly atendidosService: AtendidosService) {}
 
   @Post()
-  create(@Body() createAtendidoDto: CreateAtendidoDto) {
-    return this.atendidosService.create(createAtendidoDto);
+  async create(@Body() createAtendidoDto: CreateAtendidoDto) {
+    return await this.atendidosService.create(createAtendidoDto);
   }
 
   @Get()
@@ -29,16 +29,12 @@ export class AtendidosController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.atendidosService.findOne(+id);
+    return this.atendidosService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAtendidoDto: UpdateAtendidoDto) {
-    return this.atendidosService.update(+id, updateAtendidoDto);
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() updateAtendidoDto: UpdateAtendidoDto) {
+    return await this.atendidosService.update(id, updateAtendidoDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.atendidosService.remove(+id);
-  }
 }

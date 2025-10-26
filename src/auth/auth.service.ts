@@ -18,27 +18,28 @@ export class AuthService {
   ) { }
   async login(createAuthDto: CreateAuthDto) {
     const user = await this.findUser(createAuthDto.email);
-    if (user) {
-      const passwordHash = await bcrypt.compare(createAuthDto.password, user.password);
-      delete user.password;
+    const userObj = user.toObject();
+    if (userObj) {
+      const passwordHash = await bcrypt.compare(createAuthDto.password, userObj.password);
       if (passwordHash) {
-        const payload = { sub: user._id }
+        const payload = { sub: userObj._id }
         const access_token = this.jwtService.sign(payload);
         const refresh_token = this.jwtService.sign(payload, { expiresIn: '30d' });
-        const isAuthenticated = await this.singIn.findOne({ userId: user._id });
+        const isAuthenticated = await this.singIn.findOne({ userId: userObj._id });
 
         if (!isAuthenticated) {
-          await this.singIn.create({ userId: user._id });
+          await this.singIn.create({ userId: userObj._id });
         } else {
           await this.singIn.findOneAndUpdate(
-            { userId: user._id },
+            { userId: userObj._id },
             { $set: { updatedAt: new Date() } }
           );
         }
+        delete userObj.password
         return {
           access_token,
           refresh_token,
-          user
+          user:userObj
         };
       }
       throw new UnauthorizedException('password incorect')
@@ -50,28 +51,18 @@ export class AuthService {
     const isObjectId = Types.ObjectId.isValid(param);
     const query = isObjectId ? { _id: param } : { email: param };
 
-    const user = await this.userService.findOne(query).populate({
-      path: 'rol',
-      populate: {
-        path: 'permissions',
-        populate: [
-          { path: 'action' },
-          { path: 'subject' }
-        ]
-      }
-    });
-    if (user) return { name: `${user.firstName} ${user.lastName}`, lastName: `${user.paternalSurname} ${user.maternalSurname}`, email: user.email, _id: user._id, rol: user.rol, password: user.password, provider:null };
+    const user = await this.userService.findOne(query).populate([
+      {
+        path: 'rol',
+        populate: {
+          path: 'permissions',
+        }
+      },
+      { path: 'grade' }
+    ]);
+    if (user) return user
 
-    const client = await this.clienteService.findOne(query).populate({
-      path: 'rol',
-      populate: {
-        path: 'permissions',
-        populate: [
-          { path: 'action' },
-          { path: 'subject' }
-        ]
-      }
-    });
+    const client = await this.clienteService.findOne(query);
     if (client) return client;
 
     return null;
@@ -88,17 +79,17 @@ export class AuthService {
 
       const user = await this.findUser(payload.sub);
 
-      delete user.password
-      const access_token = this.jwtService.sign({sub: user._id});
+      const userObj = user.toObject();
+      const access_token = this.jwtService.sign({ sub: userObj._id });
       const refresh_token = this.jwtService.sign(
-        {sub: user._id},
+        { sub: userObj._id },
         { expiresIn: '30d' },
       );
-
+      delete userObj.password
       return {
         access_token,
         refresh_token,
-        user
+        user:userObj
       };
     } catch (e) {
       console.error('Error en refresco de token: ', e);
@@ -126,8 +117,8 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(updateAuthDto.token);
       const password = await bcrypt.hash(updateAuthDto.password, 10)
-      const data = await this.clienteService.findOneAndUpdate({email:payload.email},{ ...updateAuthDto, password, provider:'local' })
-      return {data}
+      const data = await this.clienteService.findOneAndUpdate({ email: payload.email }, { ...updateAuthDto, password, provider: 'local' })
+      return { data }
     } catch (e) {
       console.log('Error al crear cliente: ', e)
       throw new UnauthorizedException('Token inválido');

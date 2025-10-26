@@ -34,8 +34,8 @@ export class ComplaintsService {
   async remove(id: string) {
     return await this.typeComplaintsService.findByIdAndDelete(id);
   }
-  async findAllTypeComplaint(filters: any = {}) {
-    
+  async findAllTypeComplaint(filters: any) {
+
     const { name = '', skip = 0, limit = 10 } = filters
     const query = {
       $and: [
@@ -45,20 +45,15 @@ export class ComplaintsService {
             $options: 'i'
           }
         },
-        {
-          name: {
-            $not: {
-              $regex: '^otro$',
-              $options: 'i'
-            }
-          }
-        }
       ]
     };
+    if (filters.skip && filters.limit) {
+      const result = await this.typeComplaintsService.find(query).skip(skip).limit(limit).exec();
+      const total = await this.typeComplaintsService.countDocuments(query);
+      return { result, total }
+    }
+    return await this.typeComplaintsService.find();
 
-    const result = await this.typeComplaintsService.find(query).skip(skip).limit(limit).exec();
-    const total = await this.typeComplaintsService.countDocuments(query);
-    return { result, total }
   }
   async findAllKing() {
     return await this.kinService.find();

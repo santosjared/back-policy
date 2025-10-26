@@ -15,6 +15,7 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { ShitsModule } from './shits/shits.module';
 import { PatrolsModule } from './patrols/patrols.module';
 import { AtendidosModule } from './atendidos/atendidos.module';
+import { ConfirmedModule } from './confirmed/confirmed.module';
 
 @Module({
   imports: [ ConfigModule.forRoot({
@@ -41,6 +42,7 @@ import { AtendidosModule } from './atendidos/atendidos.module';
     ShitsModule,
     PatrolsModule,
     AtendidosModule,
+    ConfirmedModule,
   ],
 })
 export class AppModule {}
