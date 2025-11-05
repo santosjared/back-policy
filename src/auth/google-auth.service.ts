@@ -36,8 +36,7 @@ export class GoogleAuthService {
                     picture: payload.picture||'',
                     phone: payload.phone||'',
                 }
-                const rol = await this.rolService.findOne({ name: Roles.CLIENT })
-                const user = await this.clientService.create({ ...data, rol: rol._id, provider: 'google' });
+                const user = await this.clientService.create({ ...data, provider: 'google' });
                 return await this.singUser(user);
             }
         }

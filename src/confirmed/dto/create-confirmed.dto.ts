@@ -19,6 +19,10 @@ class Infractor {
     @IsString()
     alias: string
 
+    @IsString()
+    @IsOptional()
+    _id:string
+
 }
 
 export class CreateConfirmedDto {

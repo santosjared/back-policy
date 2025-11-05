@@ -3,10 +3,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ComplaintsClient, ComplaintsClientSchema } from './schema/complaints.schema';
 import { ComplaintsClientController } from './complaints.controller';
 import { ComplaintsClientService } from './complaints.service';
-import { NotificationGatewey } from 'src/notifications/gateway';
+import { NotificationGateway } from 'src/providers/socket.provider';
 import { Client, ClientSchema } from '../schema/clients.schema';
 import { TypeComplaint, TypeComplaintSchema } from 'src/complaints/schema/type-complaints.schema';
 import { Kin, KinSchema } from 'src/complaints/schema/kin.schema';
+import { SocketService } from 'src/providers/socket.service';
 
 @Module({
     imports: [
@@ -18,6 +19,6 @@ import { Kin, KinSchema } from 'src/complaints/schema/kin.schema';
         ])
     ],
     controllers:[ComplaintsClientController],
-    providers:[ComplaintsClientService, NotificationGatewey]
+    providers:[ComplaintsClientService, NotificationGateway,SocketService]
 })
 export class complaintsClientModule { }

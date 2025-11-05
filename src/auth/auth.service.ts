@@ -18,8 +18,8 @@ export class AuthService {
   ) { }
   async login(createAuthDto: CreateAuthDto) {
     const user = await this.findUser(createAuthDto.email);
-    const userObj = user.toObject();
-    if (userObj) {
+    if (user) {
+      const userObj = user.toObject();
       const passwordHash = await bcrypt.compare(createAuthDto.password, userObj.password);
       if (passwordHash) {
         const payload = { sub: userObj._id }

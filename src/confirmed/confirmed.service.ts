@@ -36,20 +36,56 @@ async create(createConfirmedDto: CreateConfirmedDto) {
   return confirmed
 }
 
-
-  findAll() {
-    return `This action returns all confirmed`;
+  async update(id: string, updateConfirmedDto: UpdateConfirmedDto) {
+  
+  if (updateConfirmedDto.otra_denuncia) {
+    const { _id } = await this.typeComplaintModel.create({ name: updateConfirmedDto.otra_denuncia });
+    updateConfirmedDto.tipo_denuncia = _id.toString();
+    delete updateConfirmedDto.otra_denuncia;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} confirmed`;
-  }
+  const confirmed = await this.confirmedModel.findById(id).populate('infractores');
+  if (!confirmed) throw new Error('Denuncia no encontrada');
 
-  update(id: number, updateConfirmedDto: UpdateConfirmedDto) {
-    return `This action updates a #${id} confirmed`;
-  }
+  const existingIds = confirmed.infractores.map((i: any) => i._id.toString());
+  const newInfractores = updateConfirmedDto.infractores || [];
 
-  remove(id: number) {
-    return `This action removes a #${id} confirmed`;
-  }
+  const toUpdate = newInfractores.filter((i) => i._id && existingIds.includes(i._id));
+  const toCreate = newInfractores.filter((i) => !i._id);
+  const toDelete = existingIds.filter((id) => !newInfractores.some((i) => i._id === id));
+
+  const created = await Promise.all(
+    toCreate.map(async (infractor) => {
+      const { _id } = await this.infractorModel.create(infractor);
+      return _id.toString();
+    })
+  );
+
+  await Promise.all(
+    toUpdate.map(async (infractor) => {
+      await this.infractorModel.findByIdAndUpdate(infractor._id, infractor);
+    })
+  );
+  await Promise.all(
+    toDelete.map(async (infractorId) => {
+      await this.infractorModel.findByIdAndDelete(infractorId);
+    })
+  );
+
+  const finalIds = [
+    ...toUpdate.map((i) => i._id),
+    ...created
+  ];
+  const updatedConfirmed = await this.confirmedModel.findByIdAndUpdate(
+    id,
+    {
+      ...updateConfirmedDto,
+      infractores: finalIds
+    },
+    { new: true }
+  );
+
+  return updatedConfirmed;
+}
+
 }

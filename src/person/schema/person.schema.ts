@@ -15,6 +15,6 @@ export class Person extends Document {
         phone?:string
         @Prop()
         picture?:string
-        @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol', required:true})
+        @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol'})
         rol:Rol
 }

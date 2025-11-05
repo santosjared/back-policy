@@ -16,6 +16,7 @@ import { ShitsModule } from './shits/shits.module';
 import { PatrolsModule } from './patrols/patrols.module';
 import { AtendidosModule } from './atendidos/atendidos.module';
 import { ConfirmedModule } from './confirmed/confirmed.module';
+import { SocketModule } from './providers/socket.module';
 
 @Module({
   imports: [ ConfigModule.forRoot({
@@ -43,6 +44,7 @@ import { ConfirmedModule } from './confirmed/confirmed.module';
     PatrolsModule,
     AtendidosModule,
     ConfirmedModule,
+    SocketModule,
   ],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@ import { fileFilter } from 'src/utils/validator/file';
 import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { NotificationGatewey } from 'src/notifications/gateway';
+import { NotificationGateway } from 'src/providers/socket.provider';
 import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
 
 @Controller('complaints-client')
@@ -15,7 +15,7 @@ import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
 export class ComplaintsClientController {
 
   constructor(private readonly complaitsService: ComplaintsClientService,
-    private readonly notificationGatewey: NotificationGatewey
+    private readonly notificationGatewey: NotificationGateway
   ) { }
 
   @Post()
@@ -68,7 +68,7 @@ export class ComplaintsClientController {
       video: videoFilename,
     };
     const response = await this.complaitsService.create(complaintData);
-    this.notificationGatewey.emitNotification({})
+    this.notificationGatewey.emitNotification()
     return response
   }
 
@@ -76,6 +76,10 @@ export class ComplaintsClientController {
   @Get()
   async findAll(@Query() filters: FiltersComplaintsDto) {
     return await this.complaitsService.findAll(filters);
+  }
+  @Get('findcomplaintofuser')
+  async findComplaintsOfUser(@Query('userId') userId:string, @Query('status') status:string){
+    return await this.complaitsService.findComplaintsOfUser(userId,status)
   }
   // @UseGuards(JwtAuthGuard)
   @Delete('complaints-refused/:id')

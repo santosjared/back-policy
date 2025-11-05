@@ -55,6 +55,7 @@ export class AtendidosService {
   }
 
   async findAll(filters: FiltersAtendidoDto) {
+   
     const { field = '', skip = 0, limit = 10 } = filters;
 
     // Consulta base
@@ -121,9 +122,15 @@ export class AtendidosService {
               },
             ],
           },
-          {
-            path: 'confirmed',
-          }
+           {
+          path: 'confirmed',
+          select: '-__v',
+          populate:[
+            { path: 'encargado', select: '-__v'},
+            { path: 'tipo_denuncia', select: '-__v'},
+            { path: 'infractores', select: '-__v'},
+          ]
+        }
         ])
         .skip(skip)
         .limit(limit)
@@ -241,14 +248,19 @@ export class AtendidosService {
             },
           ],
         },
-        {
+         {
           path: 'confirmed',
+          select: '-__v',
+          populate:[
+            { path: 'encargado', select: '-__v'},
+            { path: 'tipo_denuncia', select: '-__v'},
+            { path: 'infractores', select: '-__v'},
+          ]
         }
       ])
       .skip(skip)
       .limit(limit)
       .exec();
-
     const total = await this.atendidosModel.countDocuments(query);
     return { result, total };
   }
@@ -272,7 +284,7 @@ export class AtendidosService {
           path: 'userpatrol',
           populate: {
             path: 'user',
-            populate: { path: 'user' },
+            populate: { path: 'user', select: '-__v -password' },
           },
         },
         {
@@ -286,10 +298,11 @@ export class AtendidosService {
         },
         {
           path: 'confirmed',
+          select: '-__v',
           populate:[
-            { path: 'encargado'},
-            { path: 'tipo_denuncia'},
-            { path: 'infractores'},
+            { path: 'encargado', select: '-__v'},
+            { path: 'tipo_denuncia', select: '-__v'},
+            { path: 'infractores', select: '-__v'},
           ]
         }
       ]);
