@@ -1,95 +1,127 @@
-import { ApiProperty } from '@nestjs/swagger';
+
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNumber, IsNumberString, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+  MaxLength,
+  IsNumberString,
+  ValidateIf,
+} from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty()
+  
+  @IsNotEmpty({ message: 'El campo grado es requerido' })
   @IsString()
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  grade: string
+  grade: string;
 
-  @ApiProperty()
-  @IsOptional()
+  @ValidateIf(o => o.grade === 'Otro')
   @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  otherGrade: string
+  @MinLength(3, { message: 'El campo otro grado debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo otro grado no debe exceder más de 50 caracteres' })
+  otherGrade?: string;
 
-  @ApiProperty()
   @IsOptional()
-  @Matches(/^[A-Za-z\s]+$/, { message: 'El apellido paterno solo puede contener letras y espacios' })
-  @IsString({ message: 'El campo apellido paterno debe ser una cadena de caracteres Aa - Zz' })
+  @Matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, { message: 'El campo apellido paterno solo debe contener letras' })
+  @IsString()
+  @MinLength(3, { message: 'El campo apellido paterno debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo apellido paterno no debe exceder más de 50 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(3, 20)
-  paternalSurname: string
-  @ApiProperty()
+  paternalSurname?: string;
+
   @IsOptional()
-  @Matches(/^[A-Za-z\s]+$/, { message: 'El apellido materno solo puede contener letras y espacios' })
-  @IsString({ message: 'El campo apellido materno debe ser una cadena de caracteres Aa - Zz' })
+  @Matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, { message: 'El campo apellido materno solo debe contener letras' })
+  @IsString()
+  @MinLength(3, { message: 'El campo apellido materno debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo apellido materno no debe exceder más de 50 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(3, 20)
-  maternalSurname: string
-  @ApiProperty()
+  maternalSurname?: string;
+
+  @IsNotEmpty({ message: 'El campo 1er. nombre es requerido' })
+  @Matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, { message: 'El campo 1er. nombre solo debe contener letras' })
+  @IsString()
+  @MinLength(3, { message: 'El campo 1er. nombre debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo 1er. nombre no debe exceder más de 50 caracteres' })
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  firstName: string;
+
   @IsOptional()
-  @Matches(/^[A-Za-z\s]+$/, { message: 'El 1er. nombre solo puede contener letras y espacios' })
-  @IsString({ message: 'El campo 1er. nombre debe ser una cadena de caracteres Aa - Zz' })
+  @Matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, { message: 'El campo 2do. nombre solo debe contener letras' })
+  @IsString()
+  @MinLength(3, { message: 'El campo 2do. nombre debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo 2do. nombre no debe exceder más de 50 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(3, 20)
-  firstName: string
-  @ApiProperty()
-  @IsOptional()
-  @Matches(/^[A-Za-z\s]+$/, { message: 'El 2do. nombre solo puede contener letras y espacios' })
-  @IsString({ message: 'El campo 2do. nombre debe ser una cadena de caracteres Aa - Zz' })
+  lastName?: string;
+
+  @IsEmail({}, { message: 'Debe ingresar un correo electrónico válido' })
+  @MinLength(5, { message: 'El correo electrónico debe tener al menos 5 caracteres' })
+  @MaxLength(100, { message: 'El correo electrónico no debe exceder más de 100 caracteres' })
+  @IsNotEmpty({ message: 'El campo correo electrónico es requerido' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(3, 20)
-  lastName: string
-  @ApiProperty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'El campo ci es requerido' })
+  @MinLength(7, { message: 'El campo ci debe tener al menos 7 caracteres' })
+  @MaxLength(10, { message: 'El campo ci no debe exceder más de 10 caracteres' })
+  ci: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Seleccione la expedición del carnet' })
+  @MinLength(2, { message: 'La expedición del ci debe tener al menos 2 caracteres' })
+  @MaxLength(10, { message: 'La expedición del ci no debe exceder más de 10 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(8, 64)
-  @IsEmail()
-  email: string
-  @ApiProperty()
-  @IsNumberString({}, { message: 'El teléfono solo puede contener números' })
+  exp: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'El campo cargo es requerido' })
+  @MinLength(2, { message: 'El campo cargo debe tener al menos 2 caracteres' })
+  @MaxLength(50, { message: 'El campo cargo no debe exceder más de 50 caracteres' })
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  post: string;
+
+  @ValidateIf(o => o.post === 'Otro')
+  @IsString()
+  @MinLength(3, { message: 'El campo otro cargo debe tener al menos 3 caracteres' })
+  @MaxLength(50, { message: 'El campo otro cargo no debe exceder más de 50 caracteres' })
+  otherPost?: string;
+
+  @IsNumberString({}, { message: 'El celular debe contener solo números' })
+  @MinLength(6, { message: 'El celular debe tener al menos 6 dígitos' })
+  @MaxLength(15, { message: 'El celular no debe exceder más de 15 dígitos' })
+  @IsNotEmpty({ message: 'El campo celular es requerido' })
   @Transform(({ value }) => value?.toString().trim())
-  phone: string
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @Length(8, 32)
-  password: string
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  exp: string
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  post: string
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  otherPost: string
+  phone: string;
 
   @IsString()
+  @IsNotEmpty({ message: 'El campo dirección es requerido' })
+  @MinLength(3, { message: 'El campo dirección debe tener al menos 3 caracteres' })
+  @MaxLength(100, { message: 'El campo dirección no debe exceder más de 100 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  ci: String
-  @ApiProperty()
+  address: string;
+
   @IsString()
-  gender: 'Masculino' | 'Femenino'
-  @ApiProperty()
+  @MinLength(8, { message: 'El campo contraseña debe tener al menos 8 caracteres' })
+  @MaxLength(32, { message: 'El campo contraseña no debe exceder más de 32 caracteres' })
+  @IsNotEmpty({ message: 'El campo contraseña es requerido' })
+  password: string;
+
   @IsString()
+  @IsNotEmpty({ message: 'El campo sexo es obligatorio' })
+  gender: 'Masculino' | 'Femenino';
+
+  @IsString()
+  @IsNotEmpty({ message: 'El campo rol es requerido' })
+  @MinLength(2, { message: 'El campo rol debe tener al menos 2 caracteres' })
+  @MaxLength(50, { message: 'El campo rol no debe exceder más de 50 caracteres' })
   @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  address: string
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
+  rol: string;
 
   @IsOptional()
   @IsString()
-  status: string
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  rol: string
+  status?: string;
 }

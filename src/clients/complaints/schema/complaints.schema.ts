@@ -11,7 +11,7 @@ export type ComplaintsClientDocument = HydratedDocument<ComplaintsClient>
 @Schema({timestamps:true})
 export class ComplaintsClient{
 
-    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Client', required:true})
+    @Prop({type:mongoose.Schema.Types.ObjectId, ref:'Client'})
     userId:Client
 
     @Prop({type:mongoose.Schema.Types.ObjectId, ref:'TypeComplaint'})
@@ -52,6 +52,9 @@ export class ComplaintsClient{
 
     @Prop()
     status:string
+
+    @Prop()
+    contact?:string
 
 }
 

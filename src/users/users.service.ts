@@ -31,30 +31,31 @@ export class UsersService {
   }
 
   async findAll(filters: any) {
-    if (filters && filters.filter) {
-      const matchedRoles = await this.RolService.find({ name: { $regex: filters.filter, $options: 'i' } }).select('_id')
-      const matchedGrades = await this.GradeService.find({ name: { $regex: filters.filter, $options: 'i' } }).select('_id')
-      const matchedPost = await this.PostService.find({ name: { $regex: filters.filter, $options: 'i' } }).select('_id')
+    const { field='', skip=0, limit=0 } = filters
+    if (filters && filters.skip, filters.limit) {
+      const matchedRoles = await this.RolService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
+      const matchedGrades = await this.GradeService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
+      const matchedPost = await this.PostService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
       const query = {
         $or: [
           { grade: { $in: matchedGrades.map(g => g._id) } },
-          { paternalSurname: { $regex: filters.filter, $options: 'i' } },
-          { maternalSurname: { $regex: filters.filter, $options: 'i' } },
-          { firstName: { $regex: filters.filter, $options: 'i' } },
-          { lastName: { $regex: filters.filter, $options: 'i' } },
-          { exp: { $regex: filters.filter, $options: 'i' } },
-          { email: { $regex: filters.filter, $options: 'i' } },
-          { ci: { $regex: filters.filter, $options: 'i' } },
-          { address: { $regex: filters.filter, $options: 'i' } },
-          { phone: { $regex: filters.filter, $options: 'i' } },
-          { gender: { $regex: filters.filter, $options:'i' } },
+          { paternalSurname: { $regex: field, $options: 'i' } },
+          { maternalSurname: { $regex: field, $options: 'i' } },
+          { firstName: { $regex: field, $options: 'i' } },
+          { lastName: { $regex: field, $options: 'i' } },
+          { exp: { $regex: field, $options: 'i' } },
+          { email: { $regex: field, $options: 'i' } },
+          { ci: { $regex: field, $options: 'i' } },
+          { address: { $regex: field, $options: 'i' } },
+          { phone: { $regex: field, $options: 'i' } },
+          { gender: { $regex: field, $options:'i' } },
           { post: { $in: matchedPost.map(p => p._id) } },
-          { status: { $regex: filters.filter, $options: 'i' } },
+          { status: { $regex: field, $options: 'i' } },
           { rol: { $in: matchedRoles.map(r => r._id) } }
         ]
       }
 
-      const result = await this.userService.find(query).select('-password -__v').populate('rol grade post').skip(filters.skip).limit(filters.limit).exec()
+      const result = await this.userService.find(query).select('-password -__v').populate('rol grade post').skip(skip).limit(limit).exec()
       const total = await this.userService.countDocuments(query)
       return { result, total };
     }

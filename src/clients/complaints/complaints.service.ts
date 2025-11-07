@@ -1,12 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ComplaintsClient, ComplaintsClientDocument } from './schema/complaints.schema';
-import { isValidObjectId, Model } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { ComplaintsClientDto } from './dto/create-complaints.dto';
 import { Client, ClientDocumnet } from '../schema/clients.schema';
 import { TypeComplaint, TypeComplaintsDocument } from 'src/complaints/schema/type-complaints.schema';
 import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
 import { Kin, KinDocument } from 'src/complaints/schema/kin.schema';
+import { EmergencyComplaintDto } from './dto/emergency-complaints.dto';
 
 
 @Injectable()
@@ -19,6 +20,15 @@ export class ComplaintsClientService {
 
   async create(complaints: ComplaintsClientDto) {
     try {
+      if (!complaints.complaints || !Types.ObjectId.isValid(complaints.complaints)) {
+        delete complaints.complaints;
+      }
+      if (!complaints.aggressor || !Types.ObjectId.isValid(complaints.aggressor)) {
+        delete complaints.aggressor;
+      }
+      if (!complaints.victim || !Types.ObjectId.isValid(complaints.victim)) {
+        delete complaints.victim;
+      }
       const response = await this.complaintsService.create({
         ...complaints,
         status: 'waiting',
@@ -34,60 +44,60 @@ export class ComplaintsClientService {
     }
   }
   async findAll(filters: FiltersComplaintsDto) {
-  const { field = '', status = '', skip = 0, limit = 10 } = filters;
+    const { field = '', status = '', skip = 0, limit = 10 } = filters;
 
-  const query: any = {};
+    const query: any = {};
 
-  const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
-  if (isDate) {
-    const startDate = new Date(field);
-    const endDate = new Date(field);
-    endDate.setDate(endDate.getDate() + 1);
+    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
+    if (isDate) {
+      const startDate = new Date(field);
+      const endDate = new Date(field);
+      endDate.setDate(endDate.getDate() + 1);
 
-    query.createdAt = {
-      $gte: startDate,
-      $lt: endDate,
-    };
-  } else {
-  
-    const matchedUser = await this.userService.find({
-      $or: [
-        { name: { $regex: field, $options: 'i' } },
-        { lastName: { $regex: field, $options: 'i' } },
-        { email: { $regex: field, $options: 'i' } },
-        { phone: { $regex: field, $options: 'i' } },
-      ]
-    }).select('_id');
+      query.createdAt = {
+        $gte: startDate,
+        $lt: endDate,
+      };
+    } else {
 
-    const matchedComplaints = await this.typeComplaintService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
-    const matchedKin = await this.kinService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+      const matchedUser = await this.userService.find({
+        $or: [
+          { name: { $regex: field, $options: 'i' } },
+          { lastName: { $regex: field, $options: 'i' } },
+          { email: { $regex: field, $options: 'i' } },
+          { phone: { $regex: field, $options: 'i' } },
+        ]
+      }).select('_id');
 
-    query.$or = [
-      { place: { $regex: field, $options: 'i' } },
-      { otherComplaints: { $regex: field, $options: 'i' } },
-      { otherAggressor: { $regex: field, $options: 'i' } },
-      { otherVictim: { $regex: field, $options: 'i' } },
-      { userId: { $in: matchedUser.map(r => r._id) } },
-      { complaints: { $in: matchedComplaints.map(r => r._id) } },
-      { aggressor: { $in: matchedKin.map(r => r._id) } },
-      { victim: { $in: matchedKin.map(r => r._id) } },
-    ];
+      const matchedComplaints = await this.typeComplaintService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+      const matchedKin = await this.kinService.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+
+      query.$or = [
+        { place: { $regex: field, $options: 'i' } },
+        { otherComplaints: { $regex: field, $options: 'i' } },
+        { otherAggressor: { $regex: field, $options: 'i' } },
+        { otherVictim: { $regex: field, $options: 'i' } },
+        { userId: { $in: matchedUser.map(r => r._id) } },
+        { complaints: { $in: matchedComplaints.map(r => r._id) } },
+        { aggressor: { $in: matchedKin.map(r => r._id) } },
+        { victim: { $in: matchedKin.map(r => r._id) } },
+      ];
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const total = await this.complaintsService.countDocuments(query).exec();
+    const result = await this.complaintsService.find(query)
+      .populate('userId complaints aggressor victim')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return { total, result };
   }
-
-  if (status) {
-    query.status = status;
-  }
-
-  const total = await this.complaintsService.countDocuments(query).exec();
-  const result = await this.complaintsService.find(query)
-    .populate('userId complaints aggressor victim')
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 })
-    .exec();
-
-  return { total, result };
-}
 
   async findComplaintsOfUser(userId: string, status: string) {
     if (!isValidObjectId(userId)) {
@@ -105,7 +115,8 @@ export class ComplaintsClientService {
   }
 
   async findOne(id: string) {
-    return await this.complaintsService.findOne({ _id: id })
+    return await this.complaintsService.findById(id)
+      .populate('userId complaints aggressor victim')
   }
   async findAllWithStatus(
     status: string,
@@ -178,5 +189,22 @@ export class ComplaintsClientService {
 
   async refusedComplaint(_id: string) {
     return await this.complaintsService.findByIdAndUpdate(_id, { status: 'refused' })
+  }
+  async Emergency(emergencyDto: EmergencyComplaintDto) {
+
+    if (!emergencyDto.userId || !Types.ObjectId.isValid(emergencyDto.userId)) {
+      delete emergencyDto.userId;
+    }
+
+    let findComplaint = await this.typeComplaintService.findOne({ name: 'Emergencia' });
+    if (!findComplaint) {
+      findComplaint = await this.typeComplaintService.create({ name: 'Emergencia' });
+    }
+
+    return await this.complaintsService.create({
+      ...emergencyDto,
+      complaints: findComplaint._id.toString(),
+      status: 'waiting',
+    });
   }
 }

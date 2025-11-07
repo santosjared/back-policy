@@ -9,6 +9,7 @@ import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { NotificationGateway } from 'src/providers/socket.provider';
 import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
+import { EmergencyComplaintDto } from './dto/emergency-complaints.dto';
 
 @Controller('complaints-client')
 // @ApiBearerAuth()
@@ -72,6 +73,12 @@ export class ComplaintsClientController {
     return response
   }
 
+  @Post('emergency')
+  async Emergency(@Body() emergencyDto:EmergencyComplaintDto){
+    const response = await this.complaitsService.Emergency(emergencyDto)
+    this.notificationGatewey.emitNotification()
+    return response
+  }
   // @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Query() filters: FiltersComplaintsDto) {
@@ -80,6 +87,10 @@ export class ComplaintsClientController {
   @Get('findcomplaintofuser')
   async findComplaintsOfUser(@Query('userId') userId:string, @Query('status') status:string){
     return await this.complaitsService.findComplaintsOfUser(userId,status)
+  }
+   @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.complaitsService.findOne(id);
   }
   // @UseGuards(JwtAuthGuard)
   @Delete('complaints-refused/:id')

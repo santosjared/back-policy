@@ -10,22 +10,12 @@ import { MailService } from './mail.service';
 
 @Module({
 
-  imports:[MongooseModule.forFeature([
-    {
-      name:Client.name,
-      schema:ClientSchema
-    },
-    {
-      name:Rol.name,
-      schema:RolSchema,
-    },
+  imports: [MongooseModule.forFeature([
+    { name: Client.name, schema: ClientSchema },
+    { name: Codes.name, schema: CodesSchema }
   ]),
-  MongooseModule.forFeature([{
-    name:Codes.name,
-    schema:CodesSchema
-  }])
-],
+  ],
   controllers: [ClientsController],
   providers: [ClientsService, CodesService, MailService],
 })
-export class ClientsModule {}
+export class ClientsModule { }

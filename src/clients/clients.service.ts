@@ -11,14 +11,12 @@ import { UpdateClienteDto } from './dto/update-client.dto';
 @Injectable()
 export class ClientsService {
     constructor(@InjectModel(Client.name) private readonly ClientSercice:Model<ClientDocumnet>,
-    @InjectModel(Rol.name)private readonly rolService:Model<RolDocument>
 ){}
     
     async create(createClientDto:CreateClientDto){
         try{
             const password = await bcrypt.hash(createClientDto.password,10)
-            const rol = await this.rolService.findOne({name:Roles.CLIENT})
-            return await this.ClientSercice.create({...createClientDto, password, rol:rol._id, provider:'local'})
+            return await this.ClientSercice.create({...createClientDto, password, provider:'local'})
         }catch(e){
             console.log('Error al crear cliente: ',e)
             throw new HttpException('Interval Server', HttpStatus.INTERNAL_SERVER_ERROR)
