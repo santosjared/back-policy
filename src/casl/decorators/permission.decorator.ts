@@ -1,11 +1,11 @@
 import { SetMetadata } from '@nestjs/common';
-import { Action } from 'src/config/acl';
+import { Actions, Subjects } from 'src/types/PermissionTypes';
 
 export const CHECK_ABILITY = 'check_ability';
 
 export interface RequiredRule {
-  action: Action;
-  subject: string;
+  action: Actions;
+  subject: Subjects;
 }
 
 export const CheckAbilities = (...requirements: RequiredRule[]) =>

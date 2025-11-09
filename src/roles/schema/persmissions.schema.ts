@@ -1,17 +1,20 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { Actions, Subjects } from '../../types/PermissionTypes';
 
 export type PermissionDocument = HydratedDocument<Permission>
 
-export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete'
-export type Subjects = 'all' | 'usuarios' | 'roles' | 'denuncias' | 'home' | 'recibidos' | 'asignados' | 'atender' | 'vehiculos' | 'turnos'
 
 @Schema()
 export class Permission {
-    @Prop()
-    action: Actions[]
-    @Prop()
-    subject: Subjects;
+  @Prop()
+  action: Actions[];
+
+  @Prop()
+  subject: Subjects;
+
+  @Prop({ default: false })
+  isRoot: boolean;
 }
 
 export const PermissionsSchema = SchemaFactory.createForClass(Permission);

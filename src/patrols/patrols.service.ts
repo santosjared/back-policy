@@ -11,17 +11,17 @@ import { FiltersPatrolsDto } from './dto/filters-patrols.dto';
 @Injectable()
 export class PatrolsService {
   constructor(@InjectModel(Patrols.name) private patrolsModel: Model<PatrolsDocument>,
-  @InjectModel(Type.name) private typeModel: Model<TypeDocument>,
-  @InjectModel(Marker.name) private markerModel: Model<MarkerDocument>,
-) {}
+    @InjectModel(Type.name) private typeModel: Model<TypeDocument>,
+    @InjectModel(Marker.name) private markerModel: Model<MarkerDocument>,
+  ) { }
   async create(createPatrolDto: CreatePatrolDto) {
-    if(createPatrolDto.otherType){
-      const {_id } = await this.typeModel.create({name:createPatrolDto.otherType})
+    if (createPatrolDto.otherType) {
+      const { _id } = await this.typeModel.create({ name: createPatrolDto.otherType })
       createPatrolDto.type = _id.toString()
       delete createPatrolDto.otherType
     }
-    if(createPatrolDto.otherMarker){
-      const {_id } = await this.markerModel.create({name:createPatrolDto.otherMarker})
+    if (createPatrolDto.otherMarker) {
+      const { _id } = await this.markerModel.create({ name: createPatrolDto.otherMarker })
       createPatrolDto.marker = _id.toString()
       delete createPatrolDto.otherMarker
     }
@@ -29,20 +29,29 @@ export class PatrolsService {
   }
 
   async findAll(filters: FiltersPatrolsDto) {
-    
+
     const { field = '', skip = 0, limit = 10 } = filters;
 
-    const matchedMarkers = await this.markerModel.find({ name: { $regex: field, $options: 'i' } }).select('_id');
-    const matchedTypes = await this.typeModel.find({ name: { $regex: field, $options: 'i' } }).select('_id');
-     const query: any = {
-      $or: [
+    let query: any = {};
+    if (field) {
+      const matchedMarkers = await this.markerModel.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+      const matchedTypes = await this.typeModel.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+      const orFilters: any[] = [
         { plaque: { $regex: field, $options: 'i' } },
         { code: { $regex: field, $options: 'i' } },
         { marker: { $in: matchedMarkers.map(r => r._id) } },
         { type: { $in: matchedTypes.map(r => r._id) } },
-      ],
-    };
-    const result = await this.patrolsModel.find(query).populate('marker type').skip(skip).limit(limit).exec();
+      ];
+      query = { ...query, $or: orFilters };
+    }
+    const safeLimit = Math.min(limit, 100);
+    const result = await this.patrolsModel.find(query)
+      .populate('marker type')
+      .select('-createdAt -updatedAt -__v')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .exec();
     const total = await this.patrolsModel.countDocuments(query).exec();
     return { result, total };
   }
@@ -58,13 +67,13 @@ export class PatrolsService {
     return await this.markerModel.find().select('-__v').exec();
   }
   async update(id: string, updatePatrolDto: UpdatePatrolDto) {
-    if(updatePatrolDto.otherType){
-      const {_id } = await this.typeModel.create({name:updatePatrolDto.otherType})
+    if (updatePatrolDto.otherType) {
+      const { _id } = await this.typeModel.create({ name: updatePatrolDto.otherType })
       updatePatrolDto.type = _id.toString()
       delete updatePatrolDto.otherType
     }
-    if(updatePatrolDto.otherMarker){
-      const {_id } = await this.markerModel.create({name:updatePatrolDto.otherMarker})
+    if (updatePatrolDto.otherMarker) {
+      const { _id } = await this.markerModel.create({ name: updatePatrolDto.otherMarker })
       updatePatrolDto.marker = _id.toString()
       delete updatePatrolDto.otherMarker
     }

@@ -3,8 +3,7 @@ import { CreateShitDto } from './dto/create-shit.dto';
 import { UpdateShitDto } from './dto/update-shit.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Shits, ShitsDocument } from './schema/shits.schema';
-import { model, Model } from 'mongoose';
-import { FilterShitDto } from './dto/filter-shit.dto';
+import { Model } from 'mongoose';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
 import { Services, ServicesDocument } from './schema/services.schema';
 import { Zone, ZoneDocument } from './schema/zone.schema';
@@ -12,6 +11,7 @@ import { HourRange, HourRangeDocument } from './schema/hour-rage.schema';
 import { UserServices, UserServicesDocument } from './schema/user-services.schema';
 import { UserShift, UserShiftDocument } from './schema/user-shift.schema';
 import { Grade, GradeDocument } from 'src/users/schema/grade.schema';
+import { FiltersShiftsDto } from './dto/filters-shifts.dto';
 
 @Injectable()
 export class ShitsService {
@@ -77,19 +77,20 @@ export class ShitsService {
     return await this.shitsModel.create({ ...createShitDto, hrs: updateHrs });
   }
 
-  async findAll(filters: any) {
+  async findAll(filters: FiltersShiftsDto) {
     const { field = '', skip = 0, limit = 10 } = filters
-
-    const matchedGrades = await this.gradeModel.find({ name: { $regex: field, $options: 'i' } }).select('_id')
-
-    const query: any = {
-      $or: [
-        { grade: { $in: matchedGrades.map(r => r._id) } },
-        { date: { $regex: field, $options: 'i' } },
-        { supervisor: { $regex: field, $options: 'i' } },
-      ]
+    let query: any = {};
+    if (field) {
+      const matchedGrades = await this.gradeModel.find({ name: { $regex: field, $options: 'i' } }).select('_id');
+      const orFilters: any[] =
+        [
+          { grade: { $in: matchedGrades.map(r => r._id) } },
+          { date: { $regex: field, $options: 'i' } },
+          { supervisor: { $regex: field, $options: 'i' } },
+        ]
+      query = { ...query, $or: orFilters };
     }
-
+    const safeLimit = Math.min(limit, 100);
     const total = await this.shitsModel.countDocuments(query).exec()
     const result = await this.shitsModel
       .find(query)
@@ -97,8 +98,8 @@ export class ShitsService {
       .populate('hrs')
       .select('-createdAt -updatedAt -__v')
       .sort({ createdAt: -1 })
-      .skip(Number(skip))
-      .limit(Number(limit))
+      .skip(skip)
+      .limit(safeLimit)
       .exec()
 
     return { total, result }

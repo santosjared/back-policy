@@ -8,7 +8,6 @@ import { TypeComplaint, TypeComplaintsDocument } from "src/complaints/schema/typ
 @Injectable()
 export class SocketService {
     constructor(@InjectModel(ComplaintsClient.name) private readonly complaintModel:Model<ComplaintsClientDocument>,
-    @InjectModel(TypeComplaint.name) private readonly typeModel:Model<TypeComplaintsDocument>,
  ){}
 
     async findComplaint() {
@@ -18,23 +17,19 @@ export class SocketService {
     denunciasData,
     counts
   ] = await Promise.all([
-    // 1️⃣ Quejas en espera
     this.complaintModel.find({ status: 'waiting' })
       .populate('complaints', 'name')
       .populate('userId', 'name lastName email'),
-
-    // 2️⃣ Últimas 10 quejas
     this.complaintModel.find()
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('complaints', 'name')
       .populate('userId', 'name lastName email'),
 
-    // 3️⃣ Top 10 tipos de denuncias más realizadas
     this.complaintModel.aggregate([
       {
         $group: {
-          _id: '$complaints', // 👈 este es el campo correcto
+          _id: '$complaints', 
           total: { $sum: 1 },
         },
       },
@@ -42,7 +37,7 @@ export class SocketService {
       { $limit: 10 },
       {
         $lookup: {
-          from: 'typecomplaints', // 👈 nombre de la colección (minúscula y plural)
+          from: 'typecomplaints',
           localField: '_id',
           foreignField: '_id',
           as: 'typeInfo',
@@ -58,7 +53,6 @@ export class SocketService {
       },
     ]),
 
-    // 4️⃣ Conteo total por estado
     this.complaintModel.aggregate([
       {
         $group: {
@@ -69,7 +63,6 @@ export class SocketService {
     ]),
   ]);
 
-  // 🔢 Mapeo de conteos
   const countsMap = counts.reduce((acc, cur) => {
     acc[cur._id] = cur.total;
     return acc;

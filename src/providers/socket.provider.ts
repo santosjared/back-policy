@@ -2,8 +2,6 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { SocketService } from './socket.service';
@@ -15,21 +13,11 @@ import { SocketService } from './socket.service';
   },
   transports: ['websocket'],
 })
-export class NotificationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class NotificationGateway {
   constructor(private readonly socketService: SocketService) {}
 
   @WebSocketServer()
   server: Server;
-
-  handleConnection(client: any) {
-    console.log('✅ Cliente conectado:', client.id);
-  }
-
-  handleDisconnect(client: any) {
-    console.log('❌ Cliente desconectado:', client.id);
-  }
 
   async emitNotification() {
     const data = await this.socketService.findComplaint();
@@ -38,7 +26,6 @@ export class NotificationGateway
 
   @SubscribeMessage('emitNotification')
   async handleNotification() {
-    console.log('📩 Evento emitNotification recibido');
     const data = await this.socketService.findComplaint();
     this.server.emit('onNotification', data);
   }

@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDenunciaDto } from './dto/create-denuncia.dto';
-import { UpdateDenunciaDto } from './dto/update-denuncia.dto';
-import { Denuncias, DenunciasDocument } from './schema/denuncias.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { TypeComplaint, TypeComplaintsDocument } from './schema/type-complaints.schema';
 import { Kin, KinDocument } from './schema/kin.schema';
 import { CreateTypeComplaintsDto } from './dto/create-type-complaints.dto';
 import { UpdateTypeComplaintsDto } from './dto/update-type-complaints.dto';
+import { FiltersTypeComplaintsDto } from './dto/filters-typeComplaints.dto';
 
 @Injectable()
 export class ComplaintsService {
@@ -19,14 +17,6 @@ export class ComplaintsService {
     return await this.typeComplaintsService.create(createTypeComplaintsDto);
   }
 
-  // async findAll() {
-  //   return await this.serviceDenuncias.find();
-  // }
-
-  findOne(id: number) {
-    return `This action returns a #${id} denuncia`;
-  }
-
   async update(id: string, updateTypeComplaintDto: UpdateTypeComplaintsDto) {
     return await this.typeComplaintsService.findByIdAndUpdate(id, updateTypeComplaintDto);
   }
@@ -34,25 +24,30 @@ export class ComplaintsService {
   async remove(id: string) {
     return await this.typeComplaintsService.findByIdAndDelete(id);
   }
-  async findAllTypeComplaint(filters: any) {
+  async findAllTypeComplaint(filters: FiltersTypeComplaintsDto) {
 
-    const { name = '', skip = 0, limit = 10 } = filters
-    const query = {
-      $and: [
-        {
-          name: {
-            $regex: name,
-            $options: 'i'
-          }
-        },
-      ]
-    };
-    if (filters.skip && filters.limit) {
-      const result = await this.typeComplaintsService.find(query).skip(skip).limit(limit).exec();
-      const total = await this.typeComplaintsService.countDocuments(query);
-      return { result, total }
+    const { field = '', skip = 0, limit = 10 } = filters
+
+    let query: any = {};
+
+    if (field) {
+      const orFilters: any[] = [
+        { name: { $regex: field, $options: 'i' } },
+        { description: { $regex: field, $options: 'i' } }
+      ];
+      query = { ...query, $or: orFilters };
     }
-    return await this.typeComplaintsService.find();
+
+    const safeLimit = Math.min(limit, 100);
+
+    const result = await this.typeComplaintsService.find(query)
+      .select('-__v')
+      .skip(skip)
+      .limit(safeLimit)
+      .exec();
+
+    const total = await this.typeComplaintsService.countDocuments(query);
+    return { result, total }
 
   }
   async findAllKing() {

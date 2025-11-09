@@ -5,7 +5,7 @@ import { Type } from "./type.schema";
 
 export type PatrolsDocument = HydratedDocument<Patrols>
 
-@Schema()
+@Schema({timestamps:true})
 export class Patrols {
     @Prop()
     plaque:string

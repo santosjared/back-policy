@@ -6,13 +6,13 @@ import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Users, UsersDocument } from 'src/users/schema/users.schema';
 import { JwtService } from '@nestjs/jwt';
-import { Client, ClientDocumnet } from 'src/clients/schema/clients.schema';
+import { Client, ClientDocument } from 'src/clients/schema/clients.schema';
 import { SingIn, SingInDocument } from './schema/sing-in.schema';
 
 @Injectable()
 export class AuthService {
   constructor(@InjectModel(Users.name) private readonly userService: Model<UsersDocument>,
-    @InjectModel(Client.name) private readonly clienteService: Model<ClientDocumnet>,
+    @InjectModel(Client.name) private readonly clienteService: Model<ClientDocument>,
     @InjectModel(SingIn.name) private readonly singIn: Model<SingInDocument>,
     private jwtService: JwtService
   ) { }

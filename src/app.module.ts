@@ -11,12 +11,12 @@ import getConfig from './config/environment'
 import { complaintsClientModule } from './clients/complaints/complaints.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { PermissionsModule } from './permissions/permissions.module';
 import { ShitsModule } from './shits/shits.module';
 import { PatrolsModule } from './patrols/patrols.module';
 import { AtendidosModule } from './atendidos/atendidos.module';
 import { ConfirmedModule } from './confirmed/confirmed.module';
 import { SocketModule } from './providers/socket.module';
+import { AsignadosModule } from './asignados/asignados.module';
 
 @Module({
   imports: [ ConfigModule.forRoot({
@@ -39,12 +39,12 @@ import { SocketModule } from './providers/socket.module';
       rootPath: join(__dirname, '..', 'uploads', 'videos'),
       serveRoot: '/videos',
     }),
-    PermissionsModule,
     ShitsModule,
     PatrolsModule,
     AtendidosModule,
     ConfirmedModule,
     SocketModule,
+    AsignadosModule
   ],
 })
 export class AppModule {}

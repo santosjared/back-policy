@@ -79,11 +79,7 @@ export class ComplaintsClientController {
     this.notificationGatewey.emitNotification()
     return response
   }
-  // @UseGuards(JwtAuthGuard)
-  @Get()
-  async findAll(@Query() filters: FiltersComplaintsDto) {
-    return await this.complaitsService.findAll(filters);
-  }
+
   @Get('findcomplaintofuser')
   async findComplaintsOfUser(@Query('userId') userId:string, @Query('status') status:string){
     return await this.complaitsService.findComplaintsOfUser(userId,status)
@@ -91,11 +87,6 @@ export class ComplaintsClientController {
    @Get(':id')
   findOne(@Param('id') id: string) {
     return this.complaitsService.findOne(id);
-  }
-  // @UseGuards(JwtAuthGuard)
-  @Delete('complaints-refused/:id')
-  async refusedComplaint(@Param('id') id: string){
-    return await this.complaitsService.refusedComplaint(id)
   }
 
 }

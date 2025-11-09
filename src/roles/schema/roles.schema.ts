@@ -1,20 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-import { Permission } from 'src/permissions/schema/persmissions.schema';
+import mongoose, { HydratedDocument, Types } from 'mongoose';
 
 export type RolDocument = HydratedDocument<Rol>
 
-@Schema()
+@Schema({timestamps:true})
 export class Rol {
 
-    @Prop({ required: true, unique:true })
+    @Prop({ required: true })
     name: string;
 
     @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Permission' }] })
-    permissions: Permission[];
+    permissions: Types.ObjectId[];
 
     @Prop()
-    description:string
+    description: string
+
+    @Prop({ default: false })
+    isRoot: boolean;
 }
 
 export const RolSchema = SchemaFactory.createForClass(Rol);

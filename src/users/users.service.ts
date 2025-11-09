@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,100 +8,138 @@ import * as bcrypt from 'bcrypt';
 import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
 import { Grade, GradeDocument } from './schema/grade.schema';
 import { Post, PostDocument } from './schema/post.schema';
+import { FiltersUsersDto } from './dto/filters-users.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(Users.name) private readonly userService: Model<UsersDocument>,
-    @InjectModel(Rol.name) private readonly RolService: Model<RolDocument>,
-    @InjectModel(Grade.name) private readonly GradeService: Model<GradeDocument>,
-    @InjectModel(Post.name) private readonly PostService: Model<PostDocument>,
+  constructor(@InjectModel(Users.name) private readonly usersModel: Model<UsersDocument>,
+    @InjectModel(Rol.name) private readonly rolesModel: Model<RolDocument>,
+    @InjectModel(Grade.name) private readonly gradesModel: Model<GradeDocument>,
+    @InjectModel(Post.name) private readonly postsModel: Model<PostDocument>,
   ) { }
   async create(createUserDto: CreateUserDto) {
-    const password = await bcrypt.hash(createUserDto.password,10);
 
-    if(createUserDto.otherGrade){
-      const newGrade = await this.GradeService.create({name:createUserDto.otherGrade})
+    const password = await bcrypt.hash(createUserDto.password, 10);
+
+    if (createUserDto.otherGrade) {
+      const newGrade = await this.gradesModel.create({ name: createUserDto.otherGrade })
       createUserDto.grade = newGrade._id.toString();
     }
-    if(createUserDto.otherPost){
-      const newPost = await this.PostService.create({name:createUserDto.otherPost})
+    if (createUserDto.otherPost) {
+      const newPost = await this.postsModel.create({ name: createUserDto.otherPost })
       createUserDto.post = newPost._id.toString();
     }
-     return await this.userService.create({...createUserDto, password})
+    return await this.usersModel.create({ ...createUserDto, password })
   }
 
-  async findAll(filters: any) {
-    const { field='', skip=0, limit=0 } = filters
-    if (filters && filters.skip, filters.limit) {
-      const matchedRoles = await this.RolService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
-      const matchedGrades = await this.GradeService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
-      const matchedPost = await this.PostService.find({ name: { $regex: field, $options: 'i' } }).select('_id')
-      const query = {
-        $or: [
-          { grade: { $in: matchedGrades.map(g => g._id) } },
-          { paternalSurname: { $regex: field, $options: 'i' } },
-          { maternalSurname: { $regex: field, $options: 'i' } },
-          { firstName: { $regex: field, $options: 'i' } },
-          { lastName: { $regex: field, $options: 'i' } },
-          { exp: { $regex: field, $options: 'i' } },
-          { email: { $regex: field, $options: 'i' } },
-          { ci: { $regex: field, $options: 'i' } },
-          { address: { $regex: field, $options: 'i' } },
-          { phone: { $regex: field, $options: 'i' } },
-          { gender: { $regex: field, $options:'i' } },
-          { post: { $in: matchedPost.map(p => p._id) } },
-          { status: { $regex: field, $options: 'i' } },
-          { rol: { $in: matchedRoles.map(r => r._id) } }
-        ]
-      }
+  async findAll(filters: FiltersUsersDto): Promise<{ result: UsersDocument[]; total: number }> {
+    const { field = '', skip = 0, limit = 10 } = filters;
 
-      const result = await this.userService.find(query).select('-password -__v').populate('rol grade post').skip(skip).limit(limit).exec()
-      const total = await this.userService.countDocuments(query)
-      return { result, total };
+    let query: any = { isRoot: { $ne: true } };
+    if (field) {
+      const [matchedRoles, matchedGrades, matchedPosts] = await Promise.all([
+        this.rolesModel.find({ name: { $regex: field, $options: 'i' } }).select('_id'),
+        this.gradesModel.find({ name: { $regex: field, $options: 'i' } }).select('_id'),
+        this.postsModel.find({ name: { $regex: field, $options: 'i' } }).select('_id'),
+      ]);
+
+      const orFilters: any[] = [
+        { paternalSurname: { $regex: field, $options: 'i' } },
+        { maternalSurname: { $regex: field, $options: 'i' } },
+        { firstName: { $regex: field, $options: 'i' } },
+        { lastName: { $regex: field, $options: 'i' } },
+        { exp: { $regex: field, $options: 'i' } },
+        { email: { $regex: field, $options: 'i' } },
+        { ci: { $regex: field, $options: 'i' } },
+        { address: { $regex: field, $options: 'i' } },
+        { phone: { $regex: field, $options: 'i' } },
+        { gender: { $regex: field, $options: 'i' } },
+        { status: { $regex: field, $options: 'i' } },
+      ];
+
+      if (matchedGrades.length) orFilters.push({ grade: { $in: matchedGrades.map(g => g._id) } });
+      if (matchedRoles.length) orFilters.push({ rol: { $in: matchedRoles.map(r => r._id) } });
+      if (matchedPosts.length) orFilters.push({ post: { $in: matchedPosts.map(p => p._id) } });
+
+      query = { ...query, $or: orFilters };
     }
-    const result = await this.userService.find().select('-password -__v').populate('rol grade post')
-    const total = await this.userService.countDocuments()
+    const safeLimit = Math.min(limit, 100);
+    const result = await this.usersModel
+      .find(query)
+      .select('-password -__v -isRoot -createdAt -updatedAt')
+      .sort({ createdAt: -1 })
+      .populate('rol grade post')
+      .skip(skip)
+      .limit(safeLimit)
+      .exec();
+    const total = await this.usersModel.countDocuments(query);
+
     return { result, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const updateData: any = { ...updateUserDto }
+    if (updateUserDto.password) {
+      updateData.password = await bcrypt.hash(updateUserDto.password, 10)
+    } else {
+      delete updateData.password
+    }
 
-async update(id: string, updateUserDto: UpdateUserDto) {
-  const updateData: any = { ...updateUserDto }
-  if (updateUserDto.password) {
-    updateData.password = await bcrypt.hash(updateUserDto.password, 10)
-  } else {
-    delete updateData.password
+    if (updateUserDto.otherGrade) {
+      const newGrade = await this.gradesModel.create({ name: updateUserDto.otherGrade })
+      updateData.grade = newGrade._id.toString()
+    }
+    if (updateUserDto.otherPost) {
+      const newPost = await this.postsModel.create({ name: updateUserDto.otherPost })
+      updateData.post = newPost._id.toString()
+    }
+    const user = await this.usersModel.findById(id)
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado')
+    }
+    if (user.isRoot) {
+      throw new UnauthorizedException('no tienes autorizacion para actualizar este usuario')
+    }
+    return await this.usersModel.findByIdAndUpdate(id, updateData)
   }
-
-  if (updateUserDto.otherGrade) {
-    const newGrade = await this.GradeService.create({ name: updateUserDto.otherGrade })
-    updateData.grade = newGrade._id.toString()
-  }
-  if (updateUserDto.otherPost) {
-    const newPost = await this.PostService.create({ name: updateUserDto.otherPost })
-    updateData.post = newPost._id.toString()
-  }
-
-  return await this.userService.findByIdAndUpdate(id, updateData)
-}
 
   async dow(id: string) {
-    return await this.userService.findByIdAndUpdate(id,{status:'inactivo'});
-  }
-  async up(id: string){
-    return await this.userService.findByIdAndUpdate(id,{status:'activo'})
-  }
-   async checkEmail(email:string){
-        return await this.userService.findOne({email}) !==null;
-    }
 
-    async findGrade(){
-      return await this.GradeService.find();
+    const user = await this.usersModel.findById(id)
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado')
     }
-    async findPost(){ 
-      return await this.PostService.find(); 
+    if (user.isRoot) {
+      throw new UnauthorizedException('no tienes autorizacion para actualizar este usuario')
     }
+    return await this.usersModel.findByIdAndUpdate(id, { status: 'inactivo' });
+  }
+  async up(id: string) {
+    const user = await this.usersModel.findById(id)
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado')
+    }
+    if (user.isRoot) {
+      throw new UnauthorizedException('no tienes autorizacion para actualizar este usuario')
+    }
+    return await this.usersModel.findByIdAndUpdate(id, { status: 'activo' })
+  }
+  async checkEmail(email: string) {
+    return await this.usersModel.findOne({ email }) !== null;
+  }
+
+  async findGrade() {
+    return await this.gradesModel.find();
+  }
+  async findPost() {
+    return await this.postsModel.find();
+  }
+
+  async findOne(id:string){
+    return await this.usersModel.findById(id).select('-password')
+  }
+
+  async findRoles () {
+    return await this.rolesModel.find({ isRoot: { $ne: true } })
+  }
 }

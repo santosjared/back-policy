@@ -3,44 +3,34 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Users, UsersSchema } from 'src/users/schema/users.schema';
-import { JwtModule} from '@nestjs/jwt';
-import  environment  from 'src/config/environment'
-import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Client, ClientSchema } from 'src/clients/schema/clients.schema';
 import { SingIn, SingInSchema } from './schema/sing-in.schema';
 import { GoogleAuthService } from './google-auth.service';
 import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
 import { JwtStrategy } from './jwt.strategy';
-import getConfig from 'src/config/environment'
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports:[
-    ConfigModule.forRoot({
-      isGlobal:true,
-      load:[environment]
-    }),
-    JwtModule.register({
+  imports: [
+    UsersModule,
+    JwtModule.registerAsync({
       global: true,
-      secret:getConfig().JWT_SECRET,
-      signOptions:{expiresIn:'15m'}
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '15m' },
+      }),
     }),
-    MongooseModule.forFeature([{
-    name:Users.name,
-    schema:UsersSchema,
-  }]),
-  MongooseModule.forFeature([{
-    name:Client.name,
-    schema:ClientSchema
-  }]),
-  MongooseModule.forFeature([{
-    name:SingIn.name,
-    schema:SingInSchema
-  }]),
-  MongooseModule.forFeature([{
-    name:Rol.name,
-    schema:RolSchema
-  }])
-],
+    MongooseModule.forFeature([
+      { name: Users.name, schema: UsersSchema },
+      { name: Client.name, schema: ClientSchema },
+      { name: SingIn.name, schema: SingInSchema },
+      { name: Rol.name, schema: RolSchema },
+    ]),
+  ],
   controllers: [AuthController],
   providers: [AuthService, GoogleAuthService, JwtStrategy],
 })

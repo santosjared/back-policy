@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CaslAbilityFactory } from 'src/config/acl';
-import { Permission, PermissionsSchema } from 'src/permissions/schema/persmissions.schema';
+import { Permission, PermissionsSchema } from 'src/roles/schema/persmissions.schema';
 import { RolesService } from 'src/roles/roles.service';
 import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
 

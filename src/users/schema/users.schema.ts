@@ -6,7 +6,7 @@ import { Post } from './post.schema';
 
 export type UsersDocument = HydratedDocument<Users>
 
-@Schema()
+@Schema({timestamps:true})
 export class Users {
     @Prop()
     lastName: string
@@ -38,6 +38,8 @@ export class Users {
     address:string
     @Prop({type:String, default:'activo'})
     status:string
+    @Prop()
+    isRoot:true
 }
 
 export const UsersSchema = SchemaFactory.createForClass(Users)

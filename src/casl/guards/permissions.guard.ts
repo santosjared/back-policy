@@ -31,7 +31,7 @@ export class PermissionsGuard implements CanActivate {
 
     for (const rule of rules) {
       if (!ability.can(rule.action, rule.subject)) {
-        throw new ForbiddenException(`No tienes permiso para ${rule.action}`);
+        throw new ForbiddenException(`No tienes permisos para la accion de ${rule.action}`);
       }
     }
 

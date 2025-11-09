@@ -5,30 +5,25 @@ import {
 } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 import { RolesService } from 'src/roles/roles.service';
+import { Actions, Subjects } from 'src/types/PermissionTypes';
+import { UsersDocument } from 'src/users/schema/users.schema';
 
-export enum Action {
-  Manage = 'manage',
-  Create = 'create',
-  Read = 'read',
-  Update = 'update',
-  Delete = 'delete',
-}
 
-export type AppAbility = MongoAbility<[Action, string]>;
+
+export type AppAbility = MongoAbility<[Actions, Subjects]>;
 
 @Injectable()
 export class CaslAbilityFactory {
   constructor(private readonly roleService: RolesService) {}
 
-  async buildAbilityFor(user: any): Promise<AppAbility> {
-    const role = await this.roleService.findOne(user.role);
-    const permissions = role.permissions;
+  async buildAbilityFor(user: UsersDocument): Promise<AppAbility> {
+    const role = await this.roleService.findOne(user.rol.toString());
 
     const { can, rules } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
-    //   permissions.forEach(permission => {
-    //     permission.action.map(action => can(action.name as Action, permission.subject.name));
-    // })
+      role.permissions?.forEach((permission: { action: Actions[]; subject: Subjects; }) => {
+        permission.action?.map((action: string) => can(action as Actions, permission.subject));
+    })
 
     return createMongoAbility(rules) as AppAbility; 
   }

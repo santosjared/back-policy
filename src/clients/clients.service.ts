@@ -1,16 +1,14 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Client, ClientDocumnet } from './schema/clients.schema';
+import { Client, ClientDocument } from './schema/clients.schema';
 import { Model } from 'mongoose';
 import { CreateClientDto } from './dto/create-client.dto';
 import * as bcrypt from 'bcrypt';
-import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
-import { Roles } from 'src/constants/roles.constants';
 import { UpdateClienteDto } from './dto/update-client.dto';
 
 @Injectable()
 export class ClientsService {
-    constructor(@InjectModel(Client.name) private readonly ClientSercice:Model<ClientDocumnet>,
+    constructor(@InjectModel(Client.name) private readonly ClientSercice:Model<ClientDocument>,
 ){}
     
     async create(createClientDto:CreateClientDto){
