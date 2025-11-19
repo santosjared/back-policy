@@ -32,7 +32,6 @@ export class GoogleAuthService {
       throw new UnauthorizedException('Email no verificado');
     }
 
-    // Buscar usuario
     const existingUser = await this.clientService.findOne({ email: payload.email });
 
     let user: ClientDocument;

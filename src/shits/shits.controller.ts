@@ -46,7 +46,7 @@ export class ShitsController {
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @CheckAbilities({ action: 'personal', subject: 'shifts' })
+  // @CheckAbilities({ action: 'personal', subject: 'shifts' })
   @Get('zones')
   async findAllZones() {
     return await this.shitsService.findAllZones();

@@ -18,6 +18,17 @@ export class AsignadosController {
     }
 
     @UseGuards(JwtAuthGuard, PermissionsGuard)
+    @CheckAbilities({ action: 'print', subject: 'asignes' })
+    @Get('print')
+    async print(@Query() { date }: { date: string }) {
+        console.log(date)
+        if (date) {
+            return await this.asignadosService.generarPdF(date);
+        }
+        return null
+    }
+
+    @UseGuards(JwtAuthGuard, PermissionsGuard)
     @CheckAbilities({ action: 'confirmed', subject: 'asignes' })
     @Put(':id')
     async update(@Param('id') id: string) {

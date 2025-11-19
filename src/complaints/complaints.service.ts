@@ -45,7 +45,6 @@ export class ComplaintsService {
       .skip(skip)
       .limit(safeLimit)
       .exec();
-
     const total = await this.typeComplaintsService.countDocuments(query);
     return { result, total }
 

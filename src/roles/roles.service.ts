@@ -10,7 +10,8 @@ import { FiltersRolesDto } from './dto/filters-roles.dto';
 
 @Injectable()
 export class RolesService {
-    constructor(@InjectModel(Rol.name) private readonly rolModel: Model<RolDocument>,
+    constructor(
+        @InjectModel(Rol.name) private readonly rolModel: Model<RolDocument>,
         @InjectModel(Permission.name) private readonly permissionModel: Model<PermissionDocument>
     ) { }
 

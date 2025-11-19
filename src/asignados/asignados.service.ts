@@ -9,12 +9,12 @@ import { TypeComplaint, TypeComplaintsDocument } from "src/complaints/schema/typ
 import { UserShift, UserShiftDocument } from "src/shits/schema/user-shift.schema";
 import { FiltersAsignadosDto } from "./dto/filters-asignados.dto";
 import { Patrols } from "src/patrols/schema/patrols.schema";
-import { UserPatrolsDocument } from "src/atendidos/schema/user-patrols.schema";
+import { Shits, ShitsDocument } from "src/shits/schema/shits.schema";
 
-
-
-
-
+export type AtendidosDocumento = Atendidos & Document & {
+    createdAt: Date;
+    updatedAt: Date;
+};
 
 @Injectable()
 export class AsignadosService {
@@ -25,6 +25,7 @@ export class AsignadosService {
         @InjectModel(Kin.name) private readonly kinModel: Model<KinDocument>,
         @InjectModel(Patrols.name) private readonly patrolsModel: Model<Patrols>,
         @InjectModel(UserShift.name) private readonly usershiftModel: Model<UserShiftDocument>,
+        @InjectModel(Shits.name) private readonly shiftModel: Model<ShitsDocument>
     ) { }
 
     async findAll(filters: FiltersAsignadosDto) {
@@ -274,6 +275,56 @@ export class AsignadosService {
             { status: 'success' },
             { new: true }
         );
+    }
+
+    async generarPdF(date: string) {
+
+        const startOfDay = new Date(`${date}T00:00:00.000Z`);
+        const endOfDay = new Date(`${date}T23:59:59.999Z`);
+
+        const [turnoRaw, atendidosRaw] = await Promise.all([
+            this.shiftModel.findOne({ date }).populate('hrs'),
+            this.atendidosModel.find({
+                status: 'success',
+                createdAt: { $gte: startOfDay, $lte: endOfDay }
+            }).populate({
+                path: 'confirmed',
+                populate: { path: 'tipo_denuncia' }
+            })
+        ]);
+
+        const turno = turnoRaw;
+       const atendidos = atendidosRaw as  any[];
+
+        const result = turno?.hrs?.map?.(hr => ({
+            turno: hr.name,
+            desde: hr.hrs_i,
+            hasta: hr.hrs_s,
+            denuncias: {}
+        }));
+
+        for (const a of atendidos) {
+            const hora = a.createdAt.toTimeString().substring(0, 5);
+
+            const turnoMatch = turno.hrs.find(t =>
+                hora >= t.hrs_i && hora <= t.hrs_s
+            );
+
+            if (!turnoMatch) continue;
+
+            const tipo = a.confirmed?.tipo_denuncia?.name || "sin_tipo";
+
+            const index = result.findIndex(r => r.turno === turnoMatch.name);
+
+            if (!result[index].denuncias[tipo]) {
+                result[index].denuncias[tipo] = 0;
+            }
+
+            result[index].denuncias[tipo]++;
+        }
+
+        return result;
+
     }
 
 }

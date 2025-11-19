@@ -135,11 +135,17 @@ export class UsersService {
     return await this.postsModel.find();
   }
 
-  async findOne(id:string){
+  async findOne(id: string) {
     return await this.usersModel.findById(id).select('-password')
   }
 
-  async findRoles () {
+  async findByGrade(grade: string) {
+    const grad = await this.gradesModel.findOne({ name: grade });
+    const sup = await this.usersModel.findOne({ grade: grad._id });
+    return sup
+  }
+
+  async findRoles() {
     return await this.rolesModel.find({ isRoot: { $ne: true } })
   }
 }

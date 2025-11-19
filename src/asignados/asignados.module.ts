@@ -10,6 +10,7 @@ import { Atendidos, AtendidosSchema } from 'src/atendidos/schema/atendidos.schem
 import { UserShift, UserShiftSchema } from 'src/shits/schema/user-shift.schema';
 import { Patrols, PatrolsSchema } from 'src/patrols/schema/patrols.schema';
 import { CaslModule } from 'src/casl/casl.module';
+import { Shits, ShitSchema } from 'src/shits/schema/shits.schema';
 
 @Module({
   imports:[MongooseModule.forFeature([
@@ -20,6 +21,7 @@ import { CaslModule } from 'src/casl/casl.module';
     { name: Kin.name, schema: KinSchema},
     { name: UserShift.name, schema: UserShiftSchema},
     { name: Patrols.name, schema: PatrolsSchema},
+    { name: Shits.name, schema: ShitSchema}
   ]),
   CaslModule
 ],

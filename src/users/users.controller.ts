@@ -54,6 +54,13 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: 'create', subject: 'users' })
+  @Get('sup')
+  async finSup(@Query() { grade }: { grade: string }) {
+    return await this.usersService.findByGrade(grade);
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @CheckAbilities({ action: 'update', subject: 'users' })
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
