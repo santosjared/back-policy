@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAtendidoDto } from './dto/create-atendido.dto';
-import { UpdateAtendidoDto } from './dto/update-atendido.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Atendidos, AtendidosDocument } from './schema/atendidos.schema';
 import { Model } from 'mongoose';
@@ -13,7 +12,6 @@ import { Shits, ShitsDocument } from 'src/shits/schema/shits.schema';
 import { UserShift, UserShiftDocument } from 'src/shits/schema/user-shift.schema';
 import { ComplaintsClient, ComplaintsClientDocument } from 'src/clients/complaints/schema/complaints.schema';
 import { Client, ClientDocument } from 'src/clients/schema/clients.schema';
-import { TypeComplaint, TypeComplaintsDocument } from 'src/complaints/schema/type-complaints.schema';
 import { Kin, KinDocument } from 'src/complaints/schema/kin.schema';
 
 @Injectable()
@@ -58,15 +56,14 @@ export class AtendidosService {
 
     const query: any = {};
 
-    const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
-    if (isDate) {
-      const startDate = new Date(field);
-      const endDate = new Date(field);
-      endDate.setDate(endDate.getDate() + 1);
+      const normalized = this.normalizeToYMD(field);
+        if (normalized) {
+            const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
+            const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
 
       query.createdAt = {
-        $gte: startDate,
-        $lt: endDate,
+        $gte: startOfDay,
+        $lt: endOfDay,
       };
     } else {
 
@@ -198,6 +195,33 @@ export class AtendidosService {
   async refusedComplaint(_id: string) {
     return await this.complaintsClientModel.findByIdAndUpdate(_id, { status: 'refused' })
   }
+
+  convertirFormDate(field: string) {
+        const isISODate = /^\d{4}-\d{2}-\d{2}$/.test(field);
+        const isShortDate = /^\d{2}\/\d{2}\/\d{4}$/.test(field);
+
+        if (!isISODate && !isShortDate) return null;
+
+        let year: string, month: string, day: string;
+
+        if (isShortDate) {
+            [day, month, year] = field.split('/');
+        } else {
+            [year, month, day] = field.split('-');
+        }
+        return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+    }
+
+    private normalizeToYMD(field: string): string | null {
+        const date = this.convertirFormDate(field);
+        if (!date) return null;
+
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
 
 
 }

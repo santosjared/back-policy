@@ -20,6 +20,7 @@ export class ConfirmedService {
     @InjectModel(UserShift.name) private readonly userShiftModel: Model<UserShiftDocument>,
   ) { }
   async create(createConfirmedDto: CreateConfirmedDto) {
+    
     if (createConfirmedDto.otra_denuncia) {
       const { _id } = await this.typeComplaintModel.create({ name: createConfirmedDto.otra_denuncia })
       createConfirmedDto.tipo_denuncia = _id.toString()

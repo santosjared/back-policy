@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFiles, UseInterceptors, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UploadedFiles, UseInterceptors, UseGuards } from '@nestjs/common';
 import { ComplaintsClientService } from './complaints.service';
 import { ComplaintsClientDto } from './dto/create-complaints.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { NotificationGateway } from 'src/providers/socket.provider';
-import { FiltersComplaintsDto } from './dto/filters-complaints.dto';
 import { EmergencyComplaintDto } from './dto/emergency-complaints.dto';
 
 @Controller('complaints-client')

@@ -141,7 +141,7 @@ export class UsersService {
 
   async findByGrade(grade: string) {
     const grad = await this.gradesModel.findOne({ name: grade });
-    const sup = await this.usersModel.findOne({ grade: grad._id });
+    const sup = await this.usersModel.findOne({ grade: grad._id }).populate('grade');
     return sup
   }
 

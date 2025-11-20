@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, set } from "mongoose";
 import { Atendidos, AtendidosDocument } from "src/atendidos/schema/atendidos.schema";
 import { ComplaintsClient, ComplaintsClientDocument } from "src/clients/complaints/schema/complaints.schema";
 import { Client, ClientDocument } from "src/clients/schema/clients.schema";
@@ -10,6 +10,7 @@ import { UserShift, UserShiftDocument } from "src/shits/schema/user-shift.schema
 import { FiltersAsignadosDto } from "./dto/filters-asignados.dto";
 import { Patrols } from "src/patrols/schema/patrols.schema";
 import { Shits, ShitsDocument } from "src/shits/schema/shits.schema";
+import { startOfDay, endOfDay } from 'date-fns';
 
 export type AtendidosDocumento = Atendidos & Document & {
     createdAt: Date;
@@ -110,14 +111,13 @@ export class AsignadosService {
             const total = await this.atendidosModel.countDocuments(query);
             return { result, total };
         }
+        const normalized = this.normalizeToYMD(field);
+        if (normalized) {
+            const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
+            const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
+            // endDate.setDate(endDate.getDate() + 1);
 
-        const isDate = /^\d{4}-\d{2}-\d{2}$/.test(field);
-        if (isDate) {
-            const startDate = new Date(field);
-            const endDate = new Date(field);
-            endDate.setDate(endDate.getDate() + 1);
-
-            query.createdAt = { $gte: startDate, $lt: endDate };
+            query.createdAt = { $gte: startOfDay, $lt: endOfDay };
         } else {
             const matchedUser = await this.userModel.find({
                 $or: [
@@ -283,7 +283,41 @@ export class AsignadosService {
         const endOfDay = new Date(`${date}T23:59:59.999Z`);
 
         const [turnoRaw, atendidosRaw] = await Promise.all([
-            this.shiftModel.findOne({ date }).populate('hrs'),
+            this.shiftModel.findOne({ date }).populate({
+                path: 'hrs',
+                model: 'HourRange',
+                select: '-__v',
+                populate: {
+                    path: 'services',
+                    model: 'UserServices',
+                    select: '-__v',
+                    populate: [
+                        {
+                            path: 'users',
+                            model: 'UserShift',
+                            select: '-__v',
+                            populate: {
+                                path: 'user',
+                                model: 'Users',
+                                select: '-__v',
+                                populate: [
+                                    {
+                                        path: 'grade',
+                                        model: 'Grade',
+                                        select: '-__v',
+                                    },
+                                    {
+                                        path: 'post',
+                                        model: 'Post',
+                                        select: '-__v',
+                                    },
+
+                                ],
+                            }
+                        },
+                    ]
+                }
+            }),
             this.atendidosModel.find({
                 status: 'success',
                 createdAt: { $gte: startOfDay, $lte: endOfDay }
@@ -293,38 +327,101 @@ export class AsignadosService {
             })
         ]);
 
-        const turno = turnoRaw;
-       const atendidos = atendidosRaw as  any[];
-
-        const result = turno?.hrs?.map?.(hr => ({
+        if (!turnoRaw) return [];
+        const result = turnoRaw.hrs.map((hr: any) => ({
             turno: hr.name,
             desde: hr.hrs_i,
             hasta: hr.hrs_s,
-            denuncias: {}
+            denuncias: {},
+            positivos: 0,
+            negativos: 0,
+            total: 0
         }));
 
+        const atendidos: any = atendidosRaw;
+
         for (const a of atendidos) {
+
             const hora = a.createdAt.toTimeString().substring(0, 5);
 
-            const turnoMatch = turno.hrs.find(t =>
+            const turnoMatch = turnoRaw.hrs.find(t =>
                 hora >= t.hrs_i && hora <= t.hrs_s
             );
 
             if (!turnoMatch) continue;
 
             const tipo = a.confirmed?.tipo_denuncia?.name || "sin_tipo";
-
-            const index = result.findIndex(r => r.turno === turnoMatch.name);
-
-            if (!result[index].denuncias[tipo]) {
-                result[index].denuncias[tipo] = 0;
+            const idx = result.findIndex(r => r.turno === turnoMatch.name);
+            if (idx === -1) continue;
+            const esPositivo = a.confirmed?.isNegative === false;
+            const esNegativo = a.confirmed?.isNegative === true;
+            if (!result[idx].denuncias[tipo] && !a.confirmed.isNegative) {
+                result[idx].denuncias[tipo] = 0;
             }
-
-            result[index].denuncias[tipo]++;
+            if (!a.confirmed.isNegative) {
+                result[idx].denuncias[tipo]++;
+            }
+            if (esPositivo) result[idx].positivos++;
+            if (esNegativo) result[idx].negativos++;
+            result[idx].total++;
         }
 
-        return result;
+        let despachadores: any[] = [];
 
+        turnoRaw.hrs?.forEach((hr) => {
+    hr?.services?.forEach((servic) => {
+
+        const d = servic?.users
+            ?.filter(u => u?.user?.post?.name === "DESPACHADOR")
+            ?.map(u => u.user);
+
+        if (d && d.length > 0) {
+            despachadores.push(...d);
+        }
+
+    });
+});
+
+
+        const unique = new Map();
+
+        despachadores.forEach((item) => {
+            unique.set(item._id, item);
+        });
+
+        despachadores = Array.from(unique.values());
+
+        return { result, despachadores };
     }
+
+
+    convertirFormDate(field: string) {
+        const isISODate = /^\d{4}-\d{2}-\d{2}$/.test(field);
+        const isShortDate = /^\d{2}\/\d{2}\/\d{4}$/.test(field);
+
+        if (!isISODate && !isShortDate) return null;
+
+        let year: string, month: string, day: string;
+
+        if (isShortDate) {
+            [day, month, year] = field.split('/');
+        } else {
+            [year, month, day] = field.split('-');
+        }
+        return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+    }
+
+    private normalizeToYMD(field: string): string | null {
+        const date = this.convertirFormDate(field);
+        if (!date) return null;
+
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+
 
 }

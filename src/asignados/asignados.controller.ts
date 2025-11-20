@@ -21,7 +21,6 @@ export class AsignadosController {
     @CheckAbilities({ action: 'print', subject: 'asignes' })
     @Get('print')
     async print(@Query() { date }: { date: string }) {
-        console.log(date)
         if (date) {
             return await this.asignadosService.generarPdF(date);
         }

@@ -11,7 +11,9 @@ import {
     MinLength,
     MaxLength,
     Matches,
-    ValidateNested
+    ValidateNested,
+    IsBoolean,
+    ValidateIf
 } from "class-validator";
 
 class Infractor {
@@ -86,8 +88,12 @@ export class CreateConfirmedDto {
     @MaxLength(150, { message: 'El lugar no puede tener más de 150 caracteres' })
     lugar_hecho: string;
 
+    @ValidateIf(o => !o.isNegative)
     @IsString({ message: 'Debe seleccionar el tipo de denuncia' })
     tipo_denuncia: string;
+
+    @IsBoolean()
+    isNegative: boolean
 
     @IsOptional()
     @Transform(({ value }) => {

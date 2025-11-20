@@ -24,6 +24,8 @@ export class Confirmed {
     infractores:Infractor[]
     @Prop()
     description:string
+    @Prop({default:false})
+    isNegative:boolean
 }
 
 export const ConfirmedSchema = SchemaFactory.createForClass(Confirmed);
