@@ -113,8 +113,19 @@ export class CreateConfirmedDto {
     infractores: Infractor[];
 
     @IsOptional()
-    @IsString({ message: 'El campo descripción debe ser texto' })
-    @MinLength(10, { message: 'El campo descripción debe tener al menos 10 caracteres' })
-    @MaxLength(500, { message: 'El campo descripción no puede tener más de 500 caracteres' })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed === '' ? null : trimmed;
+        }
+        return value;
+    })
+    @IsString({ message: 'La descripción debe ser una cadena de texto' })
+    @MinLength(10, {
+        message: 'La descripción debe tener al menos 10 caracteres',
+    })
+    @MaxLength(1000, {
+        message: 'La descripción no puede tener más de 1000 caracteres',
+    })
     description?: string;
 }

@@ -19,7 +19,7 @@ export class CreateTypeComplaintsDto {
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      return trimmed === '' ? undefined : trimmed;
+      return trimmed === '' ? null : trimmed;
     }
     return value;
   })

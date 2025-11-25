@@ -56,7 +56,8 @@ export class AtendidosService {
 
     const query: any = {};
 
-      const normalized = this.normalizeToYMD(field);
+     if(field){
+       const normalized = this.normalizeToYMD(field);
         if (normalized) {
             const startOfDay = new Date(`${normalized}T00:00:00.000Z`);
             const endOfDay = new Date(`${normalized}T23:59:59.999Z`);
@@ -90,6 +91,7 @@ export class AtendidosService {
         { victim: { $in: matchedKin.map(r => r._id) } },
       ];
     }
+     }
 
     if (status) {
       query.status = status;

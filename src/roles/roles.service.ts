@@ -48,6 +48,7 @@ export class RolesService {
     }
 
     async update(id: string, updateRolDto: UpdateRolDto) {
+        console.log(updateRolDto)
         const role = await this.rolModel.findById(id)
         if (!role) {
             throw new NotFoundException('Rol no encontrado')

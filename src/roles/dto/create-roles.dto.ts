@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsOptional,
@@ -18,13 +19,20 @@ export class CreateRolDto {
   @IsUUID('all', { each: true, message: 'Cada permiso debe ser un UUID válido' })
   permissions?: string[];
 
-  @IsOptional()
-  @IsString({ message: 'La descripción debe ser una cadena de texto' })
-  @MinLength(10, {
-    message: 'La descripción debe tener al menos 10 caracteres',
-  })
-  @MaxLength(200, {
-    message: 'La descripción no puede tener más de 200 caracteres',
-  })
-  description?: string;
+ @IsOptional()
+   @Transform(({ value }) => {
+     if (typeof value === 'string') {
+       const trimmed = value.trim();
+       return trimmed === '' ? null : trimmed;
+     }
+     return value;
+   })
+   @IsString({ message: 'La descripción debe ser una cadena de texto' })
+   @MinLength(10, {
+     message: 'La descripción debe tener al menos 10 caracteres',
+   })
+   @MaxLength(500, {
+     message: 'La descripción no puede tener más de 500 caracteres',
+   })
+   description?: string;
 }
