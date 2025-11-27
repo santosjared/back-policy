@@ -17,6 +17,8 @@ export class Atendidos {
     confirmed:Confirmed
     @Prop({type:String, default:'error'})
     status:string
+    @Prop()
+    description:string
 }
 
 export const AtendidosSchema = SchemaFactory.createForClass(Atendidos);

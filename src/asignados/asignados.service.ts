@@ -234,7 +234,7 @@ export class AsignadosService {
         return { result, total };
     }
 
-    async update(id: string) {
+    async update(id: string, description: string) {
         const atendidos = await this.atendidosModel
             .findById(id)
             .populate({
@@ -272,7 +272,7 @@ export class AsignadosService {
 
         return await this.atendidosModel.findByIdAndUpdate(
             id,
-            { status: 'success' },
+            { status: 'success', description },
             { new: true }
         );
     }
@@ -321,10 +321,16 @@ export class AsignadosService {
             this.atendidosModel.find({
                 status: 'success',
                 createdAt: { $gte: startOfDay, $lte: endOfDay }
-            }).populate({
-                path: 'confirmed',
-                populate: { path: 'tipo_denuncia' }
-            })
+            }).populate([
+                {
+                    path: 'confirmed',
+                    populate: { path: 'tipo_denuncia' }
+                },
+                {
+                    path: 'complaint',
+                    populate: 'complaints'
+                }
+            ])
         ]);
 
         if (!turnoRaw) return [];
@@ -333,6 +339,7 @@ export class AsignadosService {
             desde: hr.hrs_i,
             hasta: hr.hrs_s,
             denuncias: {},
+            denuncias_general: [],
             positivos: 0,
             negativos: 0,
             total: 0
@@ -355,6 +362,7 @@ export class AsignadosService {
             if (idx === -1) continue;
             const esPositivo = a.confirmed?.isNegative === false;
             const esNegativo = a.confirmed?.isNegative === true;
+            
             if (!result[idx].denuncias[tipo] && !a.confirmed.isNegative) {
                 result[idx].denuncias[tipo] = 0;
             }
@@ -364,23 +372,33 @@ export class AsignadosService {
             if (esPositivo) result[idx].positivos++;
             if (esNegativo) result[idx].negativos++;
             result[idx].total++;
+
+            if (!result[idx].denuncias_general) {
+                result[idx].denuncias_general = [];
+            }
+
+            result[idx].denuncias_general.push({
+                complaint: a.complaint,
+                description: a.description
+            });
+
         }
 
         let despachadores: any[] = [];
 
         turnoRaw.hrs?.forEach((hr) => {
-    hr?.services?.forEach((servic) => {
+            hr?.services?.forEach((servic) => {
 
-        const d = servic?.users
-            ?.filter(u => u?.user?.post?.name === "DESPACHADOR")
-            ?.map(u => u.user);
+                const d = servic?.users
+                    ?.filter(u => u?.user?.post?.name === "DESPACHADOR")
+                    ?.map(u => u.user);
 
-        if (d && d.length > 0) {
-            despachadores.push(...d);
-        }
+                if (d && d.length > 0) {
+                    despachadores.push(...d);
+                }
 
-    });
-});
+            });
+        });
 
 
         const unique = new Map();

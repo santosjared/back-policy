@@ -25,7 +25,7 @@ export class Confirmed {
     @Prop()
     description:string
     @Prop({default:false})
-    isNegative:boolean
+    isNegative:boolean  
 }
 
 export const ConfirmedSchema = SchemaFactory.createForClass(Confirmed);

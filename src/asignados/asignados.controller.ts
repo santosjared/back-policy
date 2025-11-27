@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Put, Query, UseGuards } from "@nestjs/common";
 import { AsignadosService } from "./asignados.service";
 import { FiltersAsignadosDto } from "./dto/filters-asignados.dto";
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guards';
@@ -30,7 +30,7 @@ export class AsignadosController {
     @UseGuards(JwtAuthGuard, PermissionsGuard)
     @CheckAbilities({ action: 'confirmed', subject: 'asignes' })
     @Put(':id')
-    async update(@Param('id') id: string) {
-        return await this.asignadosService.update(id);
+    async update(@Param('id') id: string, @Body() Body:{description:string}) {
+        return await this.asignadosService.update(id, Body.description);
     }
 }
