@@ -4,7 +4,8 @@ import { IsArray, IsNumber, IsObject, IsOptional, IsString, ValidateNested } fro
 
 
 export class ComplaintsClientDto {
-    @ApiProperty()
+    
+    @IsOptional()
     @IsString()
     userId:string
 

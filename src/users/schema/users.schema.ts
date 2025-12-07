@@ -14,8 +14,6 @@ export class Users {
     email: string
     @Prop()
     phone: string
-    @Prop()
-    password: string
     @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Rol'})
     rol:Rol
     @Prop({type:mongoose.SchemaTypes.ObjectId, ref:'Grade'})

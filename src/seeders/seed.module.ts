@@ -23,6 +23,7 @@ import { GradeSeedService } from './grade-seed.service';
 import { Post, PostSchema } from 'src/users/schema/post.schema';
 import { PostSeedService } from './post-seed.service';
 import { AdminSeedService } from './admin-seed.service';
+import { Auth, AuthSchema } from 'src/auth/schema/auth.schema';
 
 
 @Module({
@@ -44,16 +45,17 @@ import { AdminSeedService } from './admin-seed.service';
       { name: Marker.name, schema: MarkerSchema },
       { name: Type.name, schema: TypeSchema },
       { name: Grade.name, schema: GradeSchema },
-      { name: Post.name, schema:PostSchema },
+      { name: Post.name, schema: PostSchema },
+      { name: Auth.name, schema: AuthSchema },
     ]),
   ],
   providers: [
-    DenunciasSeedService, 
-    KindsSeedService, 
-    ServicesSeedService, 
-    ZoneSeedService, 
-    TypeSeedService, 
-    MarkerSeedService, 
+    DenunciasSeedService,
+    KindsSeedService,
+    ServicesSeedService,
+    ZoneSeedService,
+    TypeSeedService,
+    MarkerSeedService,
     GradeSeedService,
     PostSeedService,
     AdminSeedService

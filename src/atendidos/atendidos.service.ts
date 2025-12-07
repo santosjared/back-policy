@@ -141,58 +141,55 @@ export class AtendidosService {
   }
 
 
-  async findCurrentShiftsWithActiveUsers() {
-    const now = new Date()
-    const today = now.toISOString().split('T')[0]
-    const currentTime = now.toTimeString().slice(0, 5)
-
-    const shifts = await this.shitsModel.find({ date: today })
-      .populate({
-        path: 'grade'
-      })
-      .populate({
-        path: 'hrs',
-        model: 'HourRange',
+  async findCurrentShiftsWithActiveUsers(date: string, time: string) {
+    
+  const shifts = await this.shitsModel.find({ date })
+    .populate({
+      path: 'grade'
+    })
+    .populate({
+      path: 'hrs',
+      model: 'HourRange',
+      select: '-__v',
+      populate: {
+        path: 'services',
+        model: 'UserServices',
         select: '-__v',
-        populate: {
-          path: 'services',
-          model: 'UserServices',
-          select: '-__v',
-          populate: [
-            { path: 'services', model: 'Services', select: '-__v' },
-            { path: 'zone', model: 'Zone', select: '-__v' },
-            {
-              path: 'users',
-              model: 'UserShift',
-              select: '-__v',
-              match: { status: 'active' },
-              populate: {
-                path: 'user',
-                model: 'Users',
-                select: '-password -__v',
-                populate: [
-                  { path: 'grade', model: 'Grade', select: '-__v' },
-                  { path: 'post', model: 'Post', select: '-__v' }
-                ]
-              }
+        populate: [
+          { path: 'services', model: 'Services', select: '-__v' },
+          { path: 'zone', model: 'Zone', select: '-__v' },
+          {
+            path: 'users',
+            model: 'UserShift',
+            select: '-__v',
+            match: { status: 'active' },
+            populate: {
+              path: 'user',
+              model: 'Users',
+              select: '-password -__v',
+              populate: [
+                { path: 'grade', model: 'Grade', select: '-__v' },
+                { path: 'post', model: 'Post', select: '-__v' }
+              ]
             }
-          ]
-        }
+          }
+        ]
+      }
+    })
+    .exec()
+  const filteredShifts = shifts
+    .map(shift => {
+      const validHourRanges = shift.hrs.filter(hr => {
+        if (!hr.hrs_i || !hr.hrs_s) return false
+        return hr.hrs_i <= time && time <= hr.hrs_s
       })
-      .exec()
+      return validHourRanges.length > 0 ? { ...shift.toObject(), hrs: validHourRanges } : null
+    })
+    .filter(Boolean)
 
-    const filteredShifts = shifts
-      .map(shift => {
-        const validHourRanges = shift.hrs.filter(hr => {
-          if (!hr.hrs_i || !hr.hrs_s) return false
-          return hr.hrs_i <= currentTime && currentTime <= hr.hrs_s
-        })
-        return validHourRanges.length > 0 ? { ...shift.toObject(), hrs: validHourRanges } : null
-      })
-      .filter((shift): shift is NonNullable<typeof shift> => shift !== null)
+  return filteredShifts
+}
 
-    return filteredShifts
-  }
 
   async refusedComplaint(_id: string) {
     return await this.complaintsClientModel.findByIdAndUpdate(_id, { status: 'refused' })

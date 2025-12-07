@@ -37,8 +37,6 @@ export class ComplaintsClientController {
             } else {
               return cb(new Error('Campo no permitido'), null);
             }
-
-            // Verificar si la carpeta existe, si no, crearla
             if (!existsSync(folderPath)) {
               mkdirSync(folderPath, { recursive: true });
             }

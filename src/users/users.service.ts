@@ -9,6 +9,7 @@ import { Rol, RolDocument } from 'src/roles/schema/roles.schema';
 import { Grade, GradeDocument } from './schema/grade.schema';
 import { Post, PostDocument } from './schema/post.schema';
 import { FiltersUsersDto } from './dto/filters-users.dto';
+import { Auth, AuthDocument } from 'src/auth/schema/auth.schema';
 
 @Injectable()
 export class UsersService {
@@ -16,6 +17,7 @@ export class UsersService {
     @InjectModel(Rol.name) private readonly rolesModel: Model<RolDocument>,
     @InjectModel(Grade.name) private readonly gradesModel: Model<GradeDocument>,
     @InjectModel(Post.name) private readonly postsModel: Model<PostDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
   ) { }
   async create(createUserDto: CreateUserDto) {
 
@@ -29,7 +31,8 @@ export class UsersService {
       const newPost = await this.postsModel.create({ name: createUserDto.otherPost })
       createUserDto.post = newPost._id.toString();
     }
-    return await this.usersModel.create({ ...createUserDto, password })
+    await this.authModel.create({ email: createUserDto.email, password })
+    return await this.usersModel.create(createUserDto)
   }
 
   async findAll(filters: FiltersUsersDto): Promise<{ result: UsersDocument[]; total: number }> {
@@ -78,30 +81,53 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const updateData: any = { ...updateUserDto }
-    if (updateUserDto.password) {
-      updateData.password = await bcrypt.hash(updateUserDto.password, 10)
-    } else {
-      delete updateData.password
-    }
+  const updateData: any = { ...updateUserDto }
 
-    if (updateUserDto.otherGrade) {
-      const newGrade = await this.gradesModel.create({ name: updateUserDto.otherGrade })
-      updateData.grade = newGrade._id.toString()
-    }
-    if (updateUserDto.otherPost) {
-      const newPost = await this.postsModel.create({ name: updateUserDto.otherPost })
-      updateData.post = newPost._id.toString()
-    }
-    const user = await this.usersModel.findById(id)
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado')
-    }
-    if (user.isRoot) {
-      throw new UnauthorizedException('no tienes autorizacion para actualizar este usuario')
-    }
-    return await this.usersModel.findByIdAndUpdate(id, updateData)
+  if (updateUserDto.password) {
+    updateData.password = await bcrypt.hash(updateUserDto.password, 10)
+  } else {
+    delete updateData.password
   }
+
+  if (updateUserDto.otherGrade) {
+    const newGrade = await this.gradesModel.create({ name: updateUserDto.otherGrade })
+    updateData.grade = newGrade._id.toString()
+  }
+
+  if (updateUserDto.otherPost) {
+    const newPost = await this.postsModel.create({ name: updateUserDto.otherPost })
+    updateData.post = newPost._id.toString()
+  }
+
+  const user = await this.usersModel.findById(id)
+  if (!user) {
+    throw new NotFoundException('Usuario no encontrado')
+  }
+
+  if (user.isRoot) {
+    throw new UnauthorizedException('No tienes autorización para actualizar este usuario')
+  }
+
+  const authUpdate: any = {}
+
+  if (updateUserDto.email && updateUserDto.email !== user.email) {
+    authUpdate.email = updateUserDto.email
+  }
+
+  if (updateUserDto.password) {
+    authUpdate.password = updateData.password 
+  }
+
+  if (Object.keys(authUpdate).length > 0) {
+    await this.authModel.findOneAndUpdate(
+      { email: user.email },
+      { $set: authUpdate },
+      { new: true }
+    )
+  }
+  return await this.usersModel.findByIdAndUpdate(id, updateData, { new: true })
+}
+
 
   async dow(id: string) {
 
@@ -141,9 +167,18 @@ export class UsersService {
 
   async findByGrade(grade: string) {
     const grad = await this.gradesModel.findOne({ name: grade });
-    const sup = await this.usersModel.findOne({ grade: grad._id }).populate('grade');
-    return sup
+
+    if (!grad) {
+      return null;
+    }
+
+    const sup = await this.usersModel
+      .findOne({ grade: grad._id, status: 'activo' })
+      .populate('grade');
+
+    return sup;
   }
+
 
   async findRoles() {
     return await this.rolesModel.find({ isRoot: { $ne: true } })

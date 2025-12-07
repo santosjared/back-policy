@@ -7,6 +7,7 @@ import { Users, UsersDocument } from "src/users/schema/users.schema";
 import { permissions } from "src/utils/permissions";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
+import { Auth, AuthDocument } from "src/auth/schema/auth.schema";
 
 @Injectable()
 export class AdminSeedService {
@@ -14,8 +15,9 @@ export class AdminSeedService {
     @InjectModel(Users.name) private readonly userModel: Model<UsersDocument>,
     @InjectModel(Rol.name) private readonly rolModel: Model<RolDocument>,
     @InjectModel(Permission.name) private readonly permissionModel: Model<PermissionDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async seed() {
     try {
@@ -57,7 +59,6 @@ export class AdminSeedService {
       const rootUserData = {
         firstName: rootName,
         email: rootEmail,
-        password: passwordHash,
         rol: rootRole._id,
         isRoot: true,
       };
@@ -66,6 +67,14 @@ export class AdminSeedService {
         await this.userModel.findByIdAndUpdate(rootUser._id, rootUserData);
       } else {
         await this.userModel.create(rootUserData);
+      }
+
+      const auth = await this.authModel.findOne({ isRoot: true });
+
+      if (auth) {
+        await this.authModel.findOneAndUpdate({ isRoot: true }, { email: rootEmail, password: passwordHash });
+      } else {
+        await this.authModel.create({ email: rootEmail, password: passwordHash, isRoot: true });
       }
 
       console.log("✅ Seed del usuario ROOT completado correctamente.");

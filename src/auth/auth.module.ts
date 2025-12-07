@@ -11,6 +11,7 @@ import { GoogleAuthService } from './google-auth.service';
 import { Rol, RolSchema } from 'src/roles/schema/roles.schema';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from 'src/users/users.module';
+import { Auth, AuthSchema } from './schema/auth.schema';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { UsersModule } from 'src/users/users.module';
       { name: Client.name, schema: ClientSchema },
       { name: SingIn.name, schema: SingInSchema },
       { name: Rol.name, schema: RolSchema },
+      { name: Auth.name, schema: AuthSchema },
     ]),
   ],
   controllers: [AuthController],

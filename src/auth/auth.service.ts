@@ -8,20 +8,23 @@ import { Users, UsersDocument } from 'src/users/schema/users.schema';
 import { JwtService } from '@nestjs/jwt';
 import { Client, ClientDocument } from 'src/clients/schema/clients.schema';
 import { SingIn, SingInDocument } from './schema/sing-in.schema';
+import { Auth, AuthDocument } from './schema/auth.schema';
 
 @Injectable()
 export class AuthService {
   constructor(@InjectModel(Users.name) private readonly userService: Model<UsersDocument>,
     @InjectModel(Client.name) private readonly clienteService: Model<ClientDocument>,
     @InjectModel(SingIn.name) private readonly singIn: Model<SingInDocument>,
+    @InjectModel(Auth.name) private readonly authModel: Model<AuthDocument>,
     private jwtService: JwtService
   ) { }
   async login(createAuthDto: CreateAuthDto) {
-    const user = await this.findUser(createAuthDto.email);
-    if (user) {
-      const userObj = user.toObject();
-      const passwordHash = await bcrypt.compare(createAuthDto.password, userObj.password);
+    const auth = await this.authModel.findOne({ email: createAuthDto.email })
+    if (auth) {
+      const passwordHash = await bcrypt.compare(createAuthDto.password, auth.password);
       if (passwordHash) {
+        const user = await this.findUser(createAuthDto.email);
+        const userObj = user.toObject();
         const payload = { sub: userObj._id }
         const access_token = this.jwtService.sign(payload);
         const refresh_token = this.jwtService.sign(payload, { expiresIn: '30d' });
@@ -35,11 +38,10 @@ export class AuthService {
             { $set: { updatedAt: new Date() } }
           );
         }
-        delete userObj.password
         return {
           access_token,
           refresh_token,
-          user:userObj
+          user: userObj
         };
       }
       throw new UnauthorizedException('password incorect')
@@ -85,11 +87,10 @@ export class AuthService {
         { sub: userObj._id },
         { expiresIn: '30d' },
       );
-      delete userObj.password
       return {
         access_token,
         refresh_token,
-        user:userObj
+        user: userObj
       };
     } catch (e) {
       console.error('Error en refresco de token: ', e);
@@ -117,7 +118,8 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(updateAuthDto.token);
       const password = await bcrypt.hash(updateAuthDto.password, 10)
-      const data = await this.clienteService.findOneAndUpdate({ email: payload.email }, { ...updateAuthDto, password, provider: 'local' })
+      const data = await this.clienteService.findOneAndUpdate({ email: payload.email }, { ...updateAuthDto, provider: 'local' });
+      await this.authModel.findOneAndUpdate({ email: payload.email }, { ...updateAuthDto, password})
       return { data }
     } catch (e) {
       console.log('Error al crear cliente: ', e)

@@ -95,7 +95,51 @@ export class ShitsService {
     const result = await this.shitsModel
       .find(query)
       .populate('grade')
-      .populate('hrs')
+      .populate({
+        path: 'hrs',
+        model: 'HourRange',
+        select: '-__v',
+        populate: {
+          path: 'services',
+          model: 'UserServices',
+          select: '-__v',
+          populate: [
+            {
+              path: 'users',
+              model: 'UserShift',
+              select: '-__v',
+              populate: {
+                path: 'user',
+                model: 'Users',
+                select: '-__v',
+                populate: [
+                  {
+                    path: 'grade',
+                    model: 'Grade',
+                    select: '-__v',
+                  },
+                  {
+                    path: 'post',
+                    model: 'Post',
+                    select: '-__v',
+                  },
+
+                ],
+              }
+            },
+            {
+              path: 'zone',
+              model: 'Zone',
+              select: '-__v'
+            },
+            {
+              path: 'services',
+              model: 'Services',
+              select: '-__v'
+            }
+          ]
+        }
+      })
       .select('-createdAt -updatedAt -__v')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -215,8 +259,19 @@ export class ShitsService {
   }
 
   async users() {
-    return await this.usersModel.find({ status: 'activo' }).populate('grade post').select('-password -__v').exec();
-  }
+  const grade = await this.gradeModel.findOne({ name: 'CNL. MSc. CAD.' });
+
+  const excludeId = grade ? grade._id : null;
+
+  return await this.usersModel.find({
+    status: 'activo',
+    ...(excludeId && { grade: { $ne: excludeId } })
+  })
+  .populate('grade post')
+  .select('-password -__v')
+  .exec();
+}
+
   async findAllServices() {
     return await this.servicesModel.find().select('-__v');
   }

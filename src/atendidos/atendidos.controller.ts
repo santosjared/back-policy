@@ -35,8 +35,8 @@ export class AtendidosController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @CheckAbilities({ action: 'acepted', subject: 'recibidos' })
   @Get('shifts')
-  async findShifts() {
-    return await this.atendidosService.findCurrentShiftsWithActiveUsers();
+  async findShifts(@Query('date') date: string, @Query('time') time: string) {
+    return await this.atendidosService.findCurrentShiftsWithActiveUsers(date, time);
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)

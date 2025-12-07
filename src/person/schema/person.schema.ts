@@ -7,10 +7,8 @@ export class Person extends Document {
         name?:string
         @Prop()
         lastName?:string
-        @Prop({unique:true, required:true})
-        email:string
         @Prop()
-        password?:string
+        email:string
         @Prop()
         phone?:string
         @Prop()

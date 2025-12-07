@@ -71,7 +71,6 @@ export class GoogleAuthService {
     );
 
     const userObj = user.toObject ? user.toObject() : user;
-    delete userObj.password;
 
     return {
       access_token,
