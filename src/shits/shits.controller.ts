@@ -19,6 +19,13 @@ export class ShitsController {
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: 'personal', subject: 'shifts' })
+  @Post('addturnos')
+  async createTurnos(@Body() createTurno: { turnos: string[] }) {
+    return await this.shitsService.addTurnos(createTurno.turnos);
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @CheckAbilities({ action: 'read', subject: 'shifts' })
   @Get()
   async findAll(@Query() filtrs: FiltersShiftsDto) {
@@ -51,10 +58,17 @@ export class ShitsController {
   async findAllZones() {
     return await this.shitsService.findAllZones();
   }
-  @Get(':id')
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @CheckAbilities({ action: 'personal', subject: 'shifts' })
+  @Get('turnos')
+  async findTurnos() {
+    return await this.shitsService.getTurnos();
+  }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @CheckAbilities({ action: 'read', subject: 'shifts' })
+  @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.shitsService.findOne(id);
   }

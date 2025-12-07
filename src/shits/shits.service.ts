@@ -12,6 +12,7 @@ import { UserServices, UserServicesDocument } from './schema/user-services.schem
 import { UserShift, UserShiftDocument } from './schema/user-shift.schema';
 import { Grade, GradeDocument } from 'src/users/schema/grade.schema';
 import { FiltersShiftsDto } from './dto/filters-shifts.dto';
+import { Turnos, TurnosDocument } from './schema/turnos.schema';
 
 @Injectable()
 export class ShitsService {
@@ -23,6 +24,7 @@ export class ShitsService {
     @InjectModel(UserServices.name) private userServicesModel: Model<UserServicesDocument>,
     @InjectModel(UserShift.name) private userShiftModel: Model<UserShiftDocument>,
     @InjectModel(Grade.name) private gradeModel: Model<GradeDocument>,
+    @InjectModel(Turnos.name) private readonly turnosModel:Model<TurnosDocument>
   ) { }
 
   async create(createShitDto: CreateShitDto) {
@@ -278,4 +280,38 @@ export class ShitsService {
   async findAllZones() {
     return await this.zoneModel.find().select('-__v');
   }
+  
+  async getTurnos() {
+    return await this.turnosModel.find()
+  }
+
+async addTurnos(turnos: string[]): Promise<any> {
+    const promises = turnos.map(async (turno) => {
+        const normalizedName = turno.toUpperCase().trim();
+        const nameToSave = turno.trim(); 
+        const filter = { name: new RegExp('^' + normalizedName + '$', 'i') }; 
+        const update = { 
+            name: nameToSave
+        };
+
+        const options = { 
+            new: true,
+            upsert: true,
+        };
+
+        try {
+            const result = await this.turnosModel.findOneAndUpdate(
+                filter,
+                update,
+                options
+            );
+            return result;
+        } catch (error) {
+            console.error(`Error al procesar el turno ${turno}:`, error);
+            return null;
+        }
+    });
+
+    return Promise.all(promises);
+}
 }

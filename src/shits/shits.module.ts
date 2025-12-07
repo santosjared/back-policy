@@ -11,6 +11,7 @@ import { UserShift, UserShiftSchema } from './schema/user-shift.schema';
 import { Zone, ZoneSChema } from './schema/zone.schema';
 import { Grade, GradeSchema } from 'src/users/schema/grade.schema';
 import { CaslModule } from 'src/casl/casl.module';
+import { Turnos, TurnosSchema } from './schema/turnos.schema';
 
 @Module({
   imports: [MongooseModule.forFeature([
@@ -21,7 +22,8 @@ import { CaslModule } from 'src/casl/casl.module';
     { name: UserServices.name, schema: UserServicesSchema },
     { name: UserShift.name, schema: UserShiftSchema },
     { name: Zone.name, schema: ZoneSChema },
-    { name: Grade.name, schema: GradeSchema }
+    { name: Grade.name, schema: GradeSchema },
+    { name: Turnos.name, schema:TurnosSchema }
   ]),
   CaslModule
 ],

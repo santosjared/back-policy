@@ -9,6 +9,7 @@ import { MarkerSeedService } from './marker-seed.service';
 import { GradeSeedService } from './grade-seed.service';
 import { PostSeedService } from './post-seed.service';
 import { AdminSeedService } from './admin-seed.service';
+import { TurnosSeedService } from './turnos-seed.service';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(SeedModule);
@@ -23,6 +24,7 @@ async function bootstrap() {
     const gradeSeedService = app.get(GradeSeedService);
     const postSeedService = app.get(PostSeedService);
     const adminSeedService = app.get(AdminSeedService);
+    const turnoSeedService = app.get(TurnosSeedService)
 
     await denunciasSeedService.seed();
     await kindsSeedService.seed();
@@ -33,6 +35,7 @@ async function bootstrap() {
     await gradeSeedService.seed();
     await postSeedService.seed();
     await adminSeedService.seed();
+    await turnoSeedService.seed();
 
     console.log('✅ Seed executed successfully.');
   } catch (error) {

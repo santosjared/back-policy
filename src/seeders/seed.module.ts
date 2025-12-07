@@ -24,6 +24,8 @@ import { Post, PostSchema } from 'src/users/schema/post.schema';
 import { PostSeedService } from './post-seed.service';
 import { AdminSeedService } from './admin-seed.service';
 import { Auth, AuthSchema } from 'src/auth/schema/auth.schema';
+import { Turnos, TurnosSchema } from 'src/shits/schema/turnos.schema';
+import { TurnosSeedService } from './turnos-seed.service';
 
 
 @Module({
@@ -47,6 +49,7 @@ import { Auth, AuthSchema } from 'src/auth/schema/auth.schema';
       { name: Grade.name, schema: GradeSchema },
       { name: Post.name, schema: PostSchema },
       { name: Auth.name, schema: AuthSchema },
+      { name: Turnos.name, schema:TurnosSchema },
     ]),
   ],
   providers: [
@@ -58,7 +61,8 @@ import { Auth, AuthSchema } from 'src/auth/schema/auth.schema';
     MarkerSeedService,
     GradeSeedService,
     PostSeedService,
-    AdminSeedService
+    AdminSeedService,
+    TurnosSeedService
   ],
 })
 export class SeedModule { }
