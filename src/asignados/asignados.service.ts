@@ -282,10 +282,10 @@ export class AsignadosService {
  const d = new Date(date);
 
 // inicio del día EN HORA LOCAL
-const startLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+const startLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0);
 
 // fin del día EN HORA LOCAL
-const endLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+const endLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999);
 
 // convertirlos correctamente a UTC
 const startOfDay = new Date(startLocal.getTime() - startLocal.getTimezoneOffset() * 60000);
