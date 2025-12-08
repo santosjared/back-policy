@@ -279,13 +279,18 @@ export class AsignadosService {
 
     async generarPdF(date: string) {
 
-        const d = new Date(date);
-const startLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0);
+ const d = new Date(date);
 
-const endLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999);
+// inicio del día EN HORA LOCAL
+const startLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
 
-const startOfDay = new Date(startLocal.toISOString());
-const endOfDay = new Date(endLocal.toISOString());
+// fin del día EN HORA LOCAL
+const endLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+// convertirlos correctamente a UTC
+const startOfDay = new Date(startLocal.getTime() - startLocal.getTimezoneOffset() * 60000);
+const endOfDay = new Date(endLocal.getTime() - endLocal.getTimezoneOffset() * 60000);
+
 
         const [turnoRaw, atendidosRaw] = await Promise.all([
             this.shiftModel.findOne({ date }).populate({
