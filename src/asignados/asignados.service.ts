@@ -341,7 +341,7 @@ console.log({ date, startLocal, endLocal, startOfDayUTC, endOfDayUTC });
             }),
             this.atendidosModel.find({
                 status: 'success',
-                createdAt: { $gte: startOfDay, $lte: endOfDay }
+                createdAt: { $gte: startOfDayUTC, $lte: endOfDayUTC }
             }).populate([
                 {
                     path: 'confirmed',
