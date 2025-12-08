@@ -280,14 +280,10 @@ export class AsignadosService {
     async generarPdF(date: string) {
 
         const d = new Date(date);
+const startLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0);
 
-// inicio del día en tu zona local
-const startLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+const endLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999);
 
-// fin del día en tu zona local
-const endLocal = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-
-// convertirlos a UTC
 const startOfDay = new Date(startLocal.toISOString());
 const endOfDay = new Date(endLocal.toISOString());
 
