@@ -118,13 +118,13 @@ export class UsersService {
     authUpdate.password = updateData.password 
   }
 
-  if (Object.keys(authUpdate).length > 0) {
-    await this.authModel.findOneAndUpdate(
-      { email: user.email },
-      { $set: authUpdate },
-      { new: true }
-    )
-  }
+if (Object.keys(authUpdate).length > 0) {
+  await this.authModel.findOneAndUpdate(
+    { email: user.email },
+    { $set: authUpdate },
+    { new: true, upsert: true }
+  );
+}
   return await this.usersModel.findByIdAndUpdate(id, updateData, { new: true })
 }
 
