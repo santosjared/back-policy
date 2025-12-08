@@ -291,6 +291,13 @@ const endLocal = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 2
 const startOfDay = new Date(startLocal.getTime() - startLocal.getTimezoneOffset() * 60000);
 const endOfDay = new Date(endLocal.getTime() - endLocal.getTimezoneOffset() * 60000);
 
+console.log({ 
+  date,
+  startLocal, 
+  endLocal, 
+  startOfDayUTC: startOfDay, 
+  endOfDayUTC: endOfDay 
+});
 
         const [turnoRaw, atendidosRaw] = await Promise.all([
             this.shiftModel.findOne({ date }).populate({
